@@ -4755,7 +4755,7 @@ _layout_ellipsis_item_new(Ctxt *c, const Evas_Object_Textblock_Item *cur_it)
    if (c->o->ellip_ti) _item_free(c->obj, NULL, _ITEM(c->o->ellip_ti));
    c->o->ellip_ti = ellip_ti = _layout_text_item_new(c, cur_it->format);
    ellip_ti->parent.text_node = cur_it->text_node;
-   ellip_ti->parent.text_pos = cur_it->text_pos;
+   ellip_ti->parent.text_pos = cur_it->text_pos + GET_ITEM_LEN(cur_it);
    script = evas_common_language_script_type_get(_ellip_str, len);
 
    evas_common_text_props_bidi_set(&ellip_ti->text_props,
