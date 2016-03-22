@@ -3761,7 +3761,8 @@ _layout_item_text_split_strip_white(Ctxt *c,
    /* Strip the previous white if needed */
    if ((cut >= 1) && _is_white(ts[cut - 1]) && (ti->text_props.text_len > 0))
      {
-        if (cut - 1 > 0)
+        if ((cut - 1 > 0) ||
+              ((cut - 1 >= 0) && c->ln->items && (c->ln->items->text_pos < ti->parent.text_pos)))
           {
              size_t white_cut = cut - 1;
              white_ti = _layout_text_item_new(c, ti->parent.format);

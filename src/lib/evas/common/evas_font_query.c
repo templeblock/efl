@@ -850,7 +850,7 @@ evas_common_font_query_last_up_to_pos(RGBA_Font *fn, const Evas_Text_Props *text
 
              if ((x >= EVAS_FONT_WALK_PEN_X) &&
                    ((x < (EVAS_FONT_WALK_PEN_X_AFTER)) ||
-                   (x <= (EVAS_FONT_WALK_PEN_X + _glyph_itr->width))) &&
+                    (x < (EVAS_FONT_WALK_PEN_X + _glyph_itr->x_bear + _glyph_itr->width))) &&
                  (y >= -asc) && (y <= desc))
                {
                   ret = EVAS_FONT_WALK_POS;
