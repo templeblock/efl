@@ -821,7 +821,7 @@ evas_common_font_query_last_up_to_pos(RGBA_Font *fn, const Evas_Text_Props *text
                   /* If invisible, skip */
                   if (gli->index == 0) continue;
                   if ((x >= pen_x) &&
-                        (((i == 0) && (x <= full_adv)) ||
+                        (((i == 0) && (x < full_adv)) ||
                          (x < (full_adv - (gli[-1].pen_after - start_pen)) ||
                          (x <= (pen_x + gli->width)))) &&
                         (y >= -asc) && (y <= desc))
