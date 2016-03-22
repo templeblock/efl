@@ -4841,6 +4841,7 @@ _layout_handle_ellipsis(Ctxt *c, Evas_Object_Textblock_Item *it, Eina_List *i)
                     }
 
                   _layout_item_text_split_strip_white(c, ti, l, wrap);
+                  ellip_ti->parent.text_pos = ti->parent.text_pos + ti->text_props.text_len;
                   break;
                }
              else if (wrap < 0)
