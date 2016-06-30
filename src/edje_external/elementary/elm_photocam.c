@@ -14,19 +14,19 @@ typedef struct _Elm_Params_Photocam
 
 static const char* choices[] = { "manual", "auto fit", "auto fill", NULL };
 
-static Elm_Photocam_Zoom_Mode
+static Efl_Ui_Image_Zoom_Mode
 _zoom_mode_setting_get(const char *zoom_mode_str)
 {
    unsigned int i;
 
-   assert(sizeof(choices)/sizeof(choices[0]) == ELM_PHOTOCAM_ZOOM_MODE_LAST + 1);
+   assert(sizeof(choices)/sizeof(choices[0]) == EFL_UI_IMAGE_ZOOM_MODE_LAST + 1);
 
-   for (i = 0; i < ELM_PHOTOCAM_ZOOM_MODE_LAST; i++)
+   for (i = 0; i < EFL_UI_IMAGE_ZOOM_MODE_LAST; i++)
      {
         if (!strcmp(zoom_mode_str, choices[i]))
           return i;
      }
-   return ELM_PHOTOCAM_ZOOM_MODE_LAST;
+   return EFL_UI_IMAGE_ZOOM_MODE_LAST;
 }
 
 static void
@@ -46,8 +46,8 @@ external_photocam_state_set(void *data EINA_UNUSED, Evas_Object *obj,
      elm_photocam_zoom_set(obj, p->zoom);
    if (p->zoom_mode)
      {
-        Elm_Photocam_Zoom_Mode set = _zoom_mode_setting_get(p->zoom_mode);
-        if (set == ELM_PHOTOCAM_ZOOM_MODE_LAST) return;
+        Efl_Ui_Image_Zoom_Mode set = _zoom_mode_setting_get(p->zoom_mode);
+        if (set == EFL_UI_IMAGE_ZOOM_MODE_LAST) return;
         elm_photocam_zoom_mode_set(obj, set);
      }
    if (p->paused_exists)
@@ -78,8 +78,8 @@ external_photocam_param_set(void *data EINA_UNUSED, Evas_Object *obj,
      {
         if (param->type == EDJE_EXTERNAL_PARAM_TYPE_STRING)
           {
-             Elm_Photocam_Zoom_Mode set = _zoom_mode_setting_get(param->s);
-             if (set == ELM_PHOTOCAM_ZOOM_MODE_LAST) return EINA_FALSE;
+             Efl_Ui_Image_Zoom_Mode set = _zoom_mode_setting_get(param->s);
+             if (set == EFL_UI_IMAGE_ZOOM_MODE_LAST) return EINA_FALSE;
              elm_photocam_zoom_mode_set(obj, set);
              return EINA_TRUE;
           }
@@ -123,10 +123,10 @@ external_photocam_param_get(void *data EINA_UNUSED, const Evas_Object *obj,
      {
         if (param->type == EDJE_EXTERNAL_PARAM_TYPE_STRING)
           {
-             Elm_Photocam_Zoom_Mode zoom_mode_set =
+             Efl_Ui_Image_Zoom_Mode zoom_mode_set =
                 elm_photocam_zoom_mode_get(obj);
 
-             if (zoom_mode_set == ELM_PHOTOCAM_ZOOM_MODE_LAST)
+             if (zoom_mode_set == EFL_UI_IMAGE_ZOOM_MODE_LAST)
                return EINA_FALSE;
 
              param->s = choices[zoom_mode_set];

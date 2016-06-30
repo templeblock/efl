@@ -23,15 +23,15 @@
 /**
  * Base widget smart data extended with photocam instance data.
  */
-typedef struct _Elm_Photocam_Data           Elm_Photocam_Data;
-typedef struct _Elm_Photocam_Pan_Data       Elm_Photocam_Pan_Data;
+typedef struct _Efl_Ui_Image_Zoom_Data      Efl_Ui_Image_Zoom_Data;
+typedef struct _Efl_Ui_Image_Zoom_Pan_Data  Efl_Ui_Image_Zoom_Pan_Data;
 typedef struct _Elm_Phocam_Grid             Elm_Phocam_Grid;
 typedef struct _Elm_Photocam_Grid_Item      Elm_Photocam_Grid_Item;
 
 struct _Elm_Photocam_Grid_Item
 {
    Evas_Object             *obj;
-   Elm_Photocam_Data       *sd;
+   Efl_Ui_Image_Zoom_Data  *sd;
    Evas_Object             *img;
 
    struct
@@ -57,7 +57,7 @@ struct _Elm_Phocam_Grid
                                       * over */
 };
 
-struct _Elm_Photocam_Data
+struct _Efl_Ui_Image_Zoom_Data
 {
    Evas_Object                          *hit_rect;
    Evas_Object                          *g_layer;
@@ -68,7 +68,7 @@ struct _Elm_Photocam_Data
 
    double                                g_layer_start;
    double                                zoom;
-   Elm_Photocam_Zoom_Mode                mode;
+   Efl_Ui_Image_Zoom_Mode                mode;
    Evas_Coord                            pvx, pvy, px, py, zoom_point_x,
                                          zoom_point_y;
 
@@ -131,10 +131,10 @@ struct _Elm_Photocam_Data
    Eina_Bool    orientation_changed : 1;
 };
 
-struct _Elm_Photocam_Pan_Data
+struct _Efl_Ui_Image_Zoom_Pan_Data
 {
    Evas_Object            *wobj;
-   Elm_Photocam_Data      *wsd;
+   Efl_Ui_Image_Zoom_Data *wsd;
 };
 
 /**
@@ -142,10 +142,10 @@ struct _Elm_Photocam_Pan_Data
  */
 
 #define ELM_PHOTOCAM_DATA_GET(o, sd) \
-  Elm_Photocam_Data * sd = eo_data_scope_get(o, ELM_PHOTOCAM_CLASS)
+  Efl_Ui_Image_Zoom_Data * sd = eo_data_scope_get(o, EFL_UI_IMAGE_ZOOM_CLASS)
 
 #define ELM_PHOTOCAM_PAN_DATA_GET(o, sd) \
-  Elm_Photocam_Pan_Data * sd = eo_data_scope_get(o, ELM_PHOTOCAM_PAN_CLASS)
+  Elm_Photocam_Pan_Data * sd = eo_data_scope_get(o, EFL_UI_IMAGE_ZOOM_PAN_CLASS)
 
 #define ELM_PHOTOCAM_DATA_GET_OR_RETURN(o, ptr)      \
   ELM_PHOTOCAM_DATA_GET(o, ptr);                     \
@@ -166,7 +166,7 @@ struct _Elm_Photocam_Pan_Data
     }
 
 #define ELM_PHOTOCAM_CHECK(obj)                              \
-  if (EINA_UNLIKELY(!eo_isa((obj), ELM_PHOTOCAM_CLASS))) \
+  if (EINA_UNLIKELY(!eo_isa((obj), EFL_UI_IMAGE_ZOOM_CLASS))) \
     return
 
 #endif

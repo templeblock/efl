@@ -1,6 +1,6 @@
 import evas_types;
 
-enum Elm.Photocam.Zoom_Mode
+enum Efl.Ui.Image.Zoom.Mode
 {
    [[Types of zoom available.]]
    manual = 0, [[Zoom controlled normally by elm_photocam_zoom_set]]
@@ -10,14 +10,14 @@ enum Elm.Photocam.Zoom_Mode
    last
 }
 
-class Elm.Photocam (Elm.Widget, Elm.Interface_Scrollable,
-                    Elm.Interface.Atspi_Widget_Action, Efl.File,
-                    Efl.Ui.Clickable, Efl.Ui.Scrollable,
-                    Efl.Ui.Zoomable)
+class Efl.Ui.Image.Zoom (Elm.Widget, Elm.Interface_Scrollable,
+                         Elm.Interface.Atspi_Widget_Action, Efl.File,
+                         Efl.Ui.Clickable, Efl.Ui.Scrollable,
+                         Efl.Ui.Zoomable)
 {
-   legacy_prefix: elm_photocam;
-   eo_prefix: elm_obj_photocam;
-   event_prefix: elm_photocam;
+   //legacy_prefix: elm_photocam;
+   //eo_prefix: elm_obj_photocam;
+   event_prefix: efl_ui_image_zoom;
    methods {
       @property paused {
          set {
@@ -109,7 +109,7 @@ class Elm.Photocam (Elm.Widget, Elm.Interface_Scrollable,
             ]]
          }
          values {
-            mode: Elm.Photocam.Zoom_Mode; [[The zoom mode.]]
+            mode: Efl.Ui.Image.Zoom.Mode; [[The zoom mode.]]
          }
       }
       @property image_region {

@@ -75,8 +75,8 @@ elm_eolian_files = \
 	elm_panel.eo \
 	elm_panes.eo \
 	elm_photo.eo \
-	elm_photocam.eo \
-	elm_photocam_pan.eo \
+	efl_ui_image_zoom.eo \
+	efl_ui_image_zoom_pan.eo \
 	elm_player.eo \
 	elm_plug.eo \
 	elm_popup.eo \
@@ -587,7 +587,7 @@ libelementary_la_SOURCES = \
 	elm_panel.c \
 	elm_panes.c \
 	elm_photo.c \
-	elm_photocam.c \
+	efl_ui_image_zoom.c \
 	elm_plug.c \
 	elm_prefs.c \
 	elm_prefs_data.c \

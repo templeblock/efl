@@ -165,7 +165,7 @@ my_bt_zoom_in(void *data, Evas_Object *obj EINA_UNUSED, void *event_info EINA_UN
    else
      zoom = zoom * zoom;
 
-   elm_photocam_zoom_mode_set(data, ELM_PHOTOCAM_ZOOM_MODE_MANUAL);
+   elm_photocam_zoom_mode_set(data, EFL_UI_IMAGE_ZOOM_MODE_MANUAL);
    if (zoom >= (1.0 / 32.0))
      {
         printf("zoom %f\n", zoom);
@@ -180,7 +180,7 @@ my_bt_zoom_out(void *data, Evas_Object *obj EINA_UNUSED, void *event_info EINA_U
 
    zoom = elm_photocam_zoom_get(data);
    zoom += 0.5;
-   elm_photocam_zoom_mode_set(data, ELM_PHOTOCAM_ZOOM_MODE_MANUAL);
+   elm_photocam_zoom_mode_set(data, EFL_UI_IMAGE_ZOOM_MODE_MANUAL);
    if (zoom <= 256.0)
      {
         printf("zoom %f\n", zoom);
@@ -197,19 +197,19 @@ my_bt_pause(void *data, Evas_Object *obj EINA_UNUSED, void *event_info EINA_UNUS
 static void
 my_bt_zoom_fit_in(void *data, Evas_Object *obj EINA_UNUSED, void *event_info EINA_UNUSED)
 {
-   elm_photocam_zoom_mode_set(data, ELM_PHOTOCAM_ZOOM_MODE_AUTO_FIT_IN);
+   elm_photocam_zoom_mode_set(data, EFL_UI_IMAGE_ZOOM_MODE_AUTO_FIT_IN);
 }
 
 static void
 my_bt_zoom_fit(void *data, Evas_Object *obj EINA_UNUSED, void *event_info EINA_UNUSED)
 {
-   elm_photocam_zoom_mode_set(data, ELM_PHOTOCAM_ZOOM_MODE_AUTO_FIT);
+   elm_photocam_zoom_mode_set(data, EFL_UI_IMAGE_ZOOM_MODE_AUTO_FIT);
 }
 
 static void
 my_bt_zoom_fill(void *data, Evas_Object *obj EINA_UNUSED, void *event_info EINA_UNUSED)
 {
-   elm_photocam_zoom_mode_set(data, ELM_PHOTOCAM_ZOOM_MODE_AUTO_FILL);
+   elm_photocam_zoom_mode_set(data, EFL_UI_IMAGE_ZOOM_MODE_AUTO_FILL);
 }
 
 static void
@@ -263,7 +263,7 @@ _photocam_mouse_wheel_cb(void *data, Evas *e EINA_UNUSED, Evas_Object *obj EINA_
         val++;
      }
 
-   elm_photocam_zoom_mode_set(photocam, ELM_PHOTOCAM_ZOOM_MODE_MANUAL);
+   elm_photocam_zoom_mode_set(photocam, EFL_UI_IMAGE_ZOOM_MODE_MANUAL);
    if (zoom >= 1) elm_photocam_zoom_set(photocam, zoom);
 }
 

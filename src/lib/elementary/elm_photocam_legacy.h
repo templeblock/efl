@@ -1,3 +1,12 @@
+typedef enum _Elm_Photocam_Zoom_Mode
+{
+   ELM_PHOTOCAM_ZOOM_MODE_MANUAL = 0,
+   ELM_PHOTOCAM_ZOOM_MODE_AUTO_FIT,
+   ELM_PHOTOCAM_ZOOM_MODE_AUTO_FILL,
+   ELM_PHOTOCAM_ZOOM_MODE_AUTO_FIT_IN,
+   ELM_PHOTOCAM_ZOOM_MODE_LAST,
+} Elm_Photocam_Zoom_Mode;
+
 /**
  * @brief Add a new Photocam object
  *
@@ -55,4 +64,50 @@ EAPI Evas_Load_Error elm_photocam_file_set(Evas_Object *obj, const char *file);
  */
 EAPI const char *elm_photocam_file_get(const Evas_Object *obj);
 
-#include "elm_photocam.eo.legacy.h"
+
+EAPI void elm_photocam_zoom_mode_set(Evas_Object *obj, Elm_Photocam_Zoom_Mode mode);
+
+
+EAPI Elm_Photocam_Zoom_Mode elm_photocam_zoom_mode_get(Evas_Object *obj);
+
+EAPI void elm_photocam_zoom_set(Evas_Object *obj, double zoom);
+
+
+EAPI double elm_photocam_zoom_get(Evas_Object *obj);
+
+EAPI void elm_photocam_zoom_paused_set(Evas_Object *obj, Eina_Bool paused);
+
+EAPI Eina_Bool elm_photocam_paused_get(Evas_Object *obj);
+
+EAPI Eina_Bool elm_photocam_gesture_enabled_get(Evas_Object *obj);
+
+EAPI void elm_photocam_gesture_enabled_set(Evas_Object *obj, Eina_Bool gesture);
+
+EAPI void elm_photocam_image_region_show(Evas_Object *obj, int x, int y, int w, int h);
+
+EAPI void elm_photocam_image_region_get(Evas_Object *obj, int *x, int *y, int *w, int *h);
+
+EAPI Evas_Object * elm_photocam_internal_image_get(Evas_Object *obj);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#include "efl_ui_image_zoom.eo.legacy.h"
