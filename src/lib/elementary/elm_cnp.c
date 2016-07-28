@@ -4480,9 +4480,10 @@ struct _Win32_Cnp_Selection
    void                  *udata;
    Elm_Sel_Format         requestformat;
    Elm_Drop_Cb            datacb;
-   Eina_Bool            (*set)(const Ecore_Win32_Window *window, const void *data, int size);
+   Eina_Bool            (*set)(const Ecore_Win32_Window *window, Ecore_Win32_Selection_Format format, const void *data, int size);
+   //Eina_Bool            (*set)(const Ecore_Win32_Window *window, const void *data, int size);
    Eina_Bool            (*clear)(const Ecore_Win32_Window *window);
-   Eina_Bool            (*get)(const Ecore_Win32_Window *window , void **data, int *size);
+   Eina_Bool            (*get)(const Ecore_Win32_Window *window, Ecore_Win32_Selection_Format format, void **data, int *size);
    Elm_Selection_Loss_Cb  loss_cb;
    void                  *loss_data;
 
@@ -4601,6 +4602,49 @@ _win32_elm_widget_window_get(const Evas_Object *obj)
    return win;
 }
 
+static void
+_win32_elm_cnp_converter_cb(void *udata, Ecore_Win32_Selection_Format format, void **data, int *length)
+{
+   Win32_Cnp_Selection *sel = udata;
+   if (!data)
+     {
+        ERR("returned data is not set");
+        return;
+     }
+
+   ERR("In");
+   if (sel->selbuf)
+     {
+        ERR("Has selbuf: '%s'", sel->selbuf);
+        int len = strlen(sel->selbuf);
+        char *formated_data = NULL;
+        if (format == ECORE_WIN32_SELECTION_FORMAT_TEXT)
+          {
+             char *str = calloc(1, len + 1);
+             strncpy(str, sel->selbuf, len);
+             formated_data = _elm_util_mkup_to_text(str);
+             ERR("Format: text");
+          }
+        else
+          {
+             formated_data = calloc(1, len + 1);
+             strncpy(formated_data, sel->selbuf, len);
+             ERR("Format: other");
+          }
+
+        int flen = strlen(formated_data);
+        *data = calloc(1, flen + 1);
+        strncpy(*data, formated_data, flen);
+        ERR("Set data: '%s'", (char *)formated_data);
+
+        if (length)
+          {
+             *length = flen;
+          }
+        free(formated_data);
+     }
+}
+
 static Eina_Bool
 _win32_elm_cnp_selection_set(Ecore_Win32_Window *win, Evas_Object *obj, Elm_Sel_Type selection, Elm_Sel_Format format, const void *selbuf, size_t buflen)
 {
@@ -4609,6 +4653,7 @@ _win32_elm_cnp_selection_set(Ecore_Win32_Window *win, Evas_Object *obj, Elm_Sel_
    if (selection != ELM_SEL_TYPE_CLIPBOARD)
      return EINA_FALSE;
 
+   ERR("In");
    _win32_elm_cnp_init();
    if ((!selbuf) && (format != ELM_SEL_FORMAT_IMAGE))
      return elm_object_cnp_selection_clear(obj, selection);
@@ -4621,10 +4666,49 @@ _win32_elm_cnp_selection_set(Ecore_Win32_Window *win, Evas_Object *obj, Elm_Sel_
    sel->active = EINA_TRUE;
    sel->widget = obj;
    sel->win = win;
-   if (sel->set) sel->set(win, selbuf, buflen);
+   //if (sel->set) sel->set(win, selbuf, buflen);
+   Ecore_Win32_Selection_Format ecore_format = ECORE_WIN32_SELECTION_FORMAT_TEXT;
+   if (format == ELM_SEL_FORMAT_TARGETS)
+     {
+        ecore_format = ECORE_WIN32_SELECTION_FORMAT_MARKUP;
+        ERR("Set Format: TARGETS: Markup");
+     }
+   else if (format & ELM_SEL_FORMAT_TEXT)
+     {
+        ecore_format = ECORE_WIN32_SELECTION_FORMAT_TEXT;
+        ERR("Set Format: Text");
+     }
+   else if (format & ELM_SEL_FORMAT_MARKUP)
+     {
+        ecore_format = ECORE_WIN32_SELECTION_FORMAT_MARKUP;
+        ERR("Set Format: Markup");
+     }
+   else if (format & ELM_SEL_FORMAT_IMAGE)
+     {
+        ecore_format = ECORE_WIN32_SELECTION_FORMAT_DIB;
+        ERR("Set Format: Dib");
+     }
+   else if (format & ELM_SEL_FORMAT_VCARD)
+     {
+        ecore_format = ECORE_WIN32_SELECTION_FORMAT_VCARD;
+        ERR("Set Format: Vcard");
+     }
+   else if (format & ELM_SEL_FORMAT_HTML)
+     {
+        ecore_format = ECORE_WIN32_SELECTION_FORMAT_HTML;
+        ERR("Set Format: Html");
+     }
+   else
+     {
+        ecore_format = ECORE_WIN32_SELECTION_FORMAT_TEXT;
+        ERR("Set Format: Other: Text");
+     }
+   if (sel->set) sel->set(win, ecore_format, selbuf, buflen);
    sel->format = format;
    sel->loss_cb = NULL;
    sel->loss_data = NULL;
+
+   ecore_win32_clipboard_converter_add(win, _win32_elm_cnp_converter_cb, sel);
 
    evas_object_event_callback_add
      (sel->widget, EVAS_CALLBACK_DEL, _win32_sel_obj_del, sel);
@@ -4714,6 +4798,7 @@ _win32_elm_cnp_selection_get(Ecore_Win32_Window *win,
    if (selection != ELM_SEL_TYPE_CLIPBOARD)
      return EINA_FALSE;
 
+   ERR("In");
    _win32_elm_cnp_init();
 
    sel = _win32_selections + selection;
@@ -4721,17 +4806,55 @@ _win32_elm_cnp_selection_get(Ecore_Win32_Window *win,
    if (sel->requestwidget)
      evas_object_event_callback_del_full(sel->requestwidget, EVAS_CALLBACK_DEL,
                                          _win32_sel_obj_del2, sel);
+
+   Ecore_Win32_Selection_Format ecore_format = ECORE_WIN32_SELECTION_FORMAT_TEXT;
+   if (format == ELM_SEL_FORMAT_TARGETS)
+     {
+        ecore_format = ECORE_WIN32_SELECTION_FORMAT_MARKUP;
+        ERR("Get Format: TARGETS: Markup");
+     }
+   else if (format & ELM_SEL_FORMAT_TEXT)
+     {
+        ecore_format = ECORE_WIN32_SELECTION_FORMAT_TEXT;
+        ERR("Get Format: Text");
+     }
+   else if (format & ELM_SEL_FORMAT_MARKUP)
+     {
+        ecore_format = ECORE_WIN32_SELECTION_FORMAT_MARKUP;
+        ERR("Get Format: Markup");
+     }
+   else if (format & ELM_SEL_FORMAT_IMAGE)
+     {
+        ecore_format = ECORE_WIN32_SELECTION_FORMAT_DIB;
+        ERR("Get Format: Dib");
+     }
+   else if (format & ELM_SEL_FORMAT_VCARD)
+     {
+        ecore_format = ECORE_WIN32_SELECTION_FORMAT_VCARD;
+        ERR("Get Format: Vcard");
+     }
+   else if (format & ELM_SEL_FORMAT_HTML)
+     {
+        ecore_format = ECORE_WIN32_SELECTION_FORMAT_HTML;
+        ERR("Get Format: Html");
+     }
+   else
+     {
+        ecore_format = ECORE_WIN32_SELECTION_FORMAT_TEXT;
+        ERR("Get Format: Other: Text");
+     }
    sel->requestformat = format;
    sel->requestwidget = (Evas_Object *)obj;
    sel->win = win;
-   sel->get(win, &data, &size);
+   sel->get(win, ecore_format, &data, &size);
    sel->datacb = datacb;
    sel->udata = udata;
 
    if (!data || (size <= 0))
      goto cb_add;
 
-   if ((sel->format & ELM_SEL_FORMAT_MARKUP) ||
+   ERR("Got: %s", (char *)data);
+   /*if ((sel->format & ELM_SEL_FORMAT_MARKUP) ||
        (sel->format & ELM_SEL_FORMAT_HTML))
      {
         char *str;
@@ -4739,6 +4862,7 @@ _win32_elm_cnp_selection_get(Ecore_Win32_Window *win,
         str = (char *)malloc(size + 1);
         if (str)
           {
+          ERR("Convert mkrup to text");
              memcpy(str, data, size);
              str[size] = '\0';
              data = _elm_util_mkup_to_text(str);
@@ -4753,7 +4877,7 @@ _win32_elm_cnp_selection_get(Ecore_Win32_Window *win,
              free(data);
              data = NULL;
           }
-     }
+     }*/
 
    if (sel->datacb && data && (size > 0))
      {

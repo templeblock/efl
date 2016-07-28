@@ -334,6 +334,14 @@ _ecore_win32_window_procedure(HWND   window,
        INF("clipboard data updated");
        _ecore_win32_event_handle_selection_notify(data);
        return 0;
+      case WM_RENDERFORMAT:
+       ERR("clipboard: render format");
+       _ecore_win32_event_handle_render_format(data);
+       return 0;
+      case WM_RENDERALLFORMATS:
+       ERR("clipboard: render all format");
+       _ecore_win32_event_handle_render_all_format(data);
+       return 0;
       case WM_SETCURSOR:
         {
            Ecore_Win32_Window *w;

@@ -228,6 +228,18 @@ typedef enum
    ECORE_WIN32_SELECTION_OTHER
 } Ecore_Win32_Selection;
 
+typedef enum
+{
+   ECORE_WIN32_SELECTION_FORMAT_TEXT,
+   ECORE_WIN32_SELECTION_FORMAT_UNICODE_TEXT,
+   ECORE_WIN32_SELECTION_FORMAT_OEM_TEXT,
+   ECORE_WIN32_SELECTION_FORMAT_DIB,
+   ECORE_WIN32_SELECTION_FORMAT_BITMAP,
+   ECORE_WIN32_SELECTION_FORMAT_MARKUP,
+   ECORE_WIN32_SELECTION_FORMAT_VCARD,
+   ECORE_WIN32_SELECTION_FORMAT_URL_LIST,
+   ECORE_WIN32_SELECTION_FORMAT_HTML
+} Ecore_Win32_Selection_Format;
 /**
  * @typedef Ecore_Win32_Window
  * Abstract type for a window.
@@ -679,10 +691,25 @@ EAPI void      ecore_win32_dnd_unregister_drop_target(Ecore_Win32_Window *window
  * is less than or equal to 0, this function returns #EINA_FALSE.
  *
  * @since 1.16
- */
+ *
 EAPI Eina_Bool ecore_win32_clipboard_set(const Ecore_Win32_Window *window,
                                          const void *data,
-                                         int size);
+                                         int size);*/
+EAPI Eina_Bool
+ecore_win32_clipboard_set(const Ecore_Win32_Window *window,
+                          Ecore_Win32_Selection_Format format,
+                          const void *data,
+                          int size);
+
+typedef void (*Ecore_Win32_Clipboard_Converter_Cb) (void *udata, Ecore_Win32_Selection_Format format, void **sel_data, int *length);
+
+EAPI void
+ecore_win32_clipboard_converter_add(const Ecore_Win32_Window *window,
+                                    Ecore_Win32_Clipboard_Converter_Cb func,
+                                    void *udata);
+
+EAPI void
+ecore_win32_clipboard_converter_del();
 
 /**
  * @brief Get data from the clipboard.
@@ -700,6 +727,7 @@ EAPI Eina_Bool ecore_win32_clipboard_set(const Ecore_Win32_Window *window,
  * @since 1.16
  */
 EAPI Eina_Bool ecore_win32_clipboard_get(const Ecore_Win32_Window *window,
+                                         Ecore_Win32_Selection_Format format,
                                          void **data,
                                          int *size);
 

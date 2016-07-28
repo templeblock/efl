@@ -1965,3 +1965,98 @@ _ecore_win32_event_handle_selection_notify(Ecore_Win32_Callback_Data *msg)
  free_e:
    free(e);
 }
+
+/*static WPARAM
+_convert_to_cf(Ecore_Win32_Selection_Format format)
+{
+   if (format == ECORE_WIN32_SELECTION_FORMAT_TEXT)
+     return CF_TEXT;
+
+   return CF_TEXT;
+}
+
+static Ecore_Win32_Selection_Format
+_convert_to_ecore_sel_format(unsigned int window_format)
+{
+   if (window_format == CF_TEXT)
+     return ECORE_WIN32_SELECTION_FORMAT_TEXT;
+   else if (window_format == CF_UNICODETEXT)
+     return ECORE_WIN32_SELECTION_FORMAT_UNICODE_TEXT;
+   return ECORE_WIN32_SELECTION_FORMAT_TEXT;
+}
+
+void
+_ecore_win32_set_clipboard_cb(void *data)
+{
+   ERR("In");
+   Ecore_Win32_Event_Selection_Render_Format *e = data;
+   if (!e) return;
+
+   //e->data = "abcd";
+   //e->length = 4;
+    if (!e->data || !e->length)
+      {
+         ERR("No returned data");
+         free(e);
+         return;
+      }
+    HGLOBAL hglb;
+    LPTSTR lptstr;
+
+    hglb = GlobalAlloc(GMEM_MOVEABLE, e->length + 1);
+    if (hglb == NULL)
+      {
+         free(e);
+         ERR("Cannot allocate memory");
+         return;
+      }
+
+    ERR("set data to clipboard: %s; %d", (char *)e->data, e->length);
+    lptstr = GlobalLock(hglb);
+    memcpy(lptstr, e->data, e->length);
+    lptstr[e->length] = (TCHAR) 0;
+    GlobalUnlock(hglb);
+
+    //set clipboard data
+    //need to convert back to correct format
+    //SetClipboardData(_convert_to_cf(e->format), hglb);
+    SetClipboardData(CF_TEXT, hglb);
+
+    free(e);
+}*/
+//CF_BITMAP, CF_DIB, CF_DIBV5
+//CF_ENHMETAFILE, CF_METAFILEPICT
+//CF_OEMTEXT, CF_TEXT, CF_UNICODETEXT
+void  _ecore_win32_event_handle_render_format(Ecore_Win32_Callback_Data *msg)
+{
+   if (!msg) return;
+   ERR("In render format");
+   _ecore_win32_set_clipboard(msg);
+
+    /*Ecore_Win32_Event_Selection_Render_Format *e;
+
+      e = calloc(1, sizeof(Ecore_Win32_Event_Selection_Render_Format));
+      if (!e) return;
+      e->window = (void *)GetWindowLongPtr(msg->window, GWLP_USERDATA);
+      e->timestamp = _ecore_win32_event_last_time;
+      e->selection = ECORE_WIN32_SELECTION_CLIPBOARD;
+      e->format = _convert_to_ecore_sel_format(msg->window_param);
+      e->data = NULL;
+      e->length = 0;
+
+      e->data = "abc";
+      e->length = 3;
+      _ecore_win32_set_clipboard_cb(e);
+
+    //fire event to elm_cnp to add suitable data
+    //does NOT work with ecore event: data must be ready at this point
+    //ecore_event_add(ECORE_WIN32_EVENT_SELECTION_RENDER_FORMAT, e, _ecore_win32_set_clipboard_cb, e);
+     */
+}
+
+void  _ecore_win32_event_handle_render_all_format(Ecore_Win32_Callback_Data *msg)
+{
+   ///handle???
+   ERR("In Render all format");
+   //CloseClipboard();
+}
