@@ -4602,6 +4602,60 @@ _win32_elm_widget_window_get(const Evas_Object *obj)
    return win;
 }
 
+static char *
+_win32_elm_cnp_correct_newline(char *data)
+{
+   if (!data) return NULL;
+
+   int len = strlen(data);
+   printf("len: %d, data: '%s'\n", len, data);
+   char *ret = calloc(1, len + 1);
+   int i = 0;
+   //unix is \n, windows is \r\n
+   char *p = data, *prv = data;
+   while(*p != '\0')
+     {
+        printf("%c", *p);
+        if (*p == '\n')
+          {
+             if ((prv != p) && (*prv != '\r'))
+               {
+                  if (i == len)
+                    {
+                       ret = realloc(ret, i + 2);
+                       len += 2;
+                    }
+                  ret[i++] = '\r';
+                  ret[i++] = '\n';
+               }
+             else
+               {
+                  if (i == len)
+                    {
+                       ret = realloc(ret, i + 1);
+                       len++;
+                    }
+                  ret[i++] = *p;
+               }
+          }
+        else
+          {
+             if (i == len)
+               {
+                  ret = realloc(ret, i + 1);
+                  len++;
+               }
+             ret[i++] = *p;
+          }
+        prv = p;
+        p++;
+
+        //printf("\n");
+     }
+   ret[i] = '\0';
+   return ret;
+}
+
 static void
 _win32_elm_cnp_converter_cb(void *udata, Ecore_Win32_Selection_Format format, void **data, int *length)
 {
