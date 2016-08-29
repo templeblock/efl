@@ -339,13 +339,12 @@ evas_common_font_query_size(RGBA_Font *fn, const Evas_Text_Props *text_props, in
         const Evas_Font_Glyph_Info *last_glyph = text_props->info->glyph + off;;
 
         const Evas_Font_Glyph_Info *glyph = last_glyph;
+        size_t cur_cluster;
         size_t cluster = 0;
-        size_t cur_cluster = 0;
 
 #ifdef OT_SUPPORT
         Evas_Font_OT_Info *ot = text_props->info->ot + off;
         cluster = ot->source_cluster;
-        cur_cluster = ot->source_cluster;
 #endif
 
         do
@@ -361,8 +360,8 @@ evas_common_font_query_size(RGBA_Font *fn, const Evas_Text_Props *text_props, in
 #ifdef OT_SUPPORT
              cur_w += EVAS_FONT_ROUND_26_6_TO_INT(EVAS_FONT_OT_X_OFF_GET(*ot));
 
-             cur_cluster = ot->source_cluster;
              ot--;
+             cur_cluster = ot->source_cluster;
 #else
              cur_cluster = cluster + 1; /* Change cluster manually for no OT */
 #endif
