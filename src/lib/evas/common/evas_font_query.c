@@ -824,30 +824,31 @@ evas_common_font_query_last_up_to_pos(RGBA_Font *fn, const Evas_Text_Props *text
    if (text_props->bidi_dir == EVAS_BIDI_DIRECTION_RTL)
      {
         Evas_Font_Glyph_Info *gli = NULL;
-        Evas_Coord full_adv = 0, pen_x = 0, start_pen = 0;
         int i;
 
         if ((text_props->info) && (text_props->len > 0))
           {
-             gli = text_props->info->glyph + text_props->start;
-             full_adv = gli[text_props->len - 1].pen_after;
-             if (text_props->start > 0)
-               {
-                  start_pen = gli[-1].pen_after;
-                  full_adv -= start_pen;
-               }
+             Evas_Coord full_w = 0;
 
+             gli = text_props->info->glyph + text_props->start;
              gli += text_props->len - 1;
+
+             if (text_props->len > 1)
+               {
+                  full_w += gli[-1].pen_after;
+               }
+             full_w += gli->x_bear + gli->width;
 
              for (i = text_props->len - 1 ; i >= 0 ; i--, gli--)
                {
-                  pen_x = full_adv - (gli->pen_after - start_pen);
+                  Evas_Coord pen_x = 0;
                   /* If invisible, skip */
                   if (gli->index == 0) continue;
-                  if ((x >= pen_x) &&
-                        (((i == 0) && (x <= full_adv)) ||
-                         (x < (full_adv - (gli[-1].pen_after - start_pen)) ||
-                         (x < (pen_x + gli->x_bear + gli->width)))) &&
+                  if (text_props->len > 1)
+                    {
+                       pen_x = gli[-1].pen_after;
+                    }
+                  if ((full_w - pen_x > x) &&
                         (y >= -asc) && (y <= desc))
                     {
 #ifdef OT_SUPPORT
