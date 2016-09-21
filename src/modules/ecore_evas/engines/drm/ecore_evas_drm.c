@@ -775,7 +775,7 @@ _ecore_evas_new_internal(const char *device, int x, int y, int w, int h, Eina_Bo
    edata->h = h;
    edata->depth = 24; // FIXME: Remove hardcode
    edata->bpp = 32; // FIXME: Remove hardcode
-   edata->format = DRM_FORMAT_XRGB8888;
+   edata->format = DRM_FORMAT_ARGB8888;
 
    if (_ecore_evas_drm_init(ee, edata, device) < 1)
      {
