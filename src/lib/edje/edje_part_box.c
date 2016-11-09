@@ -202,5 +202,4 @@ _efl_canvas_layout_internal_box_efl_orientation_orientation_get(Eo *obj, Edje_Bo
    RETURN_VAL(EFL_ORIENT_NONE);
 }
 
-#include "efl_canvas_layout_internal.eo.c"
 #include "efl_canvas_layout_internal_box.eo.c"
