@@ -3,11 +3,12 @@
 
 #define EFL_CANVAS_LAYOUT_INTERNAL_SWALLOW_PROTECTED
 #define MY_CLASS EFL_CANVAS_LAYOUT_INTERNAL_SWALLOW_CLASS
-#define SWALLOW_CLASS EFL_CANVAS_LAYOUT_INTERNAL_SWALLOW_CLASS
 
 #include "efl_canvas_layout_internal_swallow.eo.h"
 
 PROXY_IMPLEMENTATION(swallow, SWALLOW, Edje_Swallow_Data)
+
+#undef PROXY_IMPLEMENTATION
 
 /* Swallow parts */
 EOLIAN static Efl_Gfx *

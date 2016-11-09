@@ -1,4 +1,5 @@
 #include "edje_private.h"
+#define EFL_CANVAS_LAYOUT_INTERNAL_PROTECTED
 #include "efl_canvas_layout_internal.eo.h"
 
 struct _Edje_Part_Data
@@ -73,7 +74,7 @@ _edje_ ## type ## _internal_proxy_get(Edje_Object *obj EINA_UNUSED, Edje *ed, Ed
    Edje_Part_Data *pd; \
    Eo *proxy; \
    \
-   pd = efl_data_scope_get(_ ## type ## _proxy, TYPE ## _CLASS); \
+   pd = efl_data_scope_get(_ ## type ## _proxy, MY_CLASS); \
    if (!pd) \
      { \
         if (_ ## type ## _proxy) \
@@ -81,7 +82,7 @@ _edje_ ## type ## _internal_proxy_get(Edje_Object *obj EINA_UNUSED, Edje *ed, Ed
              ERR("Found invalid handle for efl_part. Reset."); \
              _ ## type ## _proxy = NULL; \
           } \
-        return efl_add(TYPE ## _CLASS, ed->obj, \
+        return efl_add(MY_CLASS, ed->obj, \
                       _edje_real_part_set(efl_added, ed, rp, rp->part->name)); \
      } \
    \
@@ -114,7 +115,21 @@ EOLIAN static Efl_Object * \
 _efl_canvas_layout_internal_ ## type ## _efl_object_finalize(Eo *obj, datatype *pd) \
 { \
    EINA_SAFETY_ON_FALSE_RETURN_VAL(pd->rp && pd->ed && pd->part, NULL); \
-   return efl_finalize(efl_super(obj, TYPE ## _CLASS)); \
+   return efl_finalize(efl_super(obj, MY_CLASS)); \
 }
 
-#include "efl_canvas_layout_internal.eo.c"
+#ifdef DEBUG
+#define PART_TABLE_GET(obj, part, ...) ({ \
+   Eo *__table = efl_part(obj, part); \
+   if (!__table || !efl_isa(__table, EFL_CANVAS_LAYOUT_INTERNAL_TABLE_CLASS)) \
+     { \
+        ERR("No such table part '%s' in layout %p", part, obj); \
+        return __VA_ARGS__; \
+     } \
+   __table; })
+#else
+#define PART_TABLE_GET(obj, part, ...) ({ \
+   Eo *__table = efl_part(obj, part); \
+   if (!__table) return __VA_ARGS__; \
+   __table; })
+#endif
