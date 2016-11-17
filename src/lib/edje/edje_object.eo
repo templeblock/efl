@@ -1256,30 +1256,6 @@ class Edje.Object (Efl.Canvas.Group.Clipped, Efl.File, Efl.Container, Efl.Part,
             part: string; [[The part name]]
          }
       }
-      part_text_append {
-         [[Insert text for an object part.
-
-           This function inserts the text for an object part at the end; It does not
-           move the cursor.
-
-           @since 1.1]]
-
-         params {
-            @in part: string; [[The part name]]
-            @in text: string; [[The text string]]
-         }
-      }
-      part_text_insert {
-         [[Insert text for an object part.
-
-           This function inserts the text for an object part just before the
-           cursor position.]]
-
-         params {
-            @in part: string; [[The part name]]
-            @in text: string; [[The text string]]
-         }
-      }
       part_text_user_insert @const {
          [[This function inserts text as if the user has inserted it.
 

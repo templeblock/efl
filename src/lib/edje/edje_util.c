@@ -2382,10 +2382,13 @@ _edje_object_part_text_select_all(Eo *obj EINA_UNUSED, Edje *ed, const char *par
      _edje_entry_select_all(rp);
 }
 
-EOLIAN void
-_edje_object_part_text_insert(Eo *obj, Edje *ed, const char *part, const char *text)
+EAPI void
+edje_object_part_text_insert(Eo *obj, const char *part, const char *text)
 {
    Edje_Real_Part *rp;
+   Edje *ed;
+
+   ed = efl_data_scope_get(obj, EDJE_OBJECT_CLASS);
 
    if ((!ed) || (!part)) return;
    rp = _edje_real_part_recursive_get(&ed, part);
@@ -2404,10 +2407,13 @@ _edje_object_part_text_insert(Eo *obj, Edje *ed, const char *part, const char *t
      ed->text_change.func(ed->text_change.data, obj, part);
 }
 
-EOLIAN void
-_edje_object_part_text_append(Eo *obj, Edje *ed, const char *part, const char *text)
+EAPI void
+edje_object_part_text_append(Eo *obj, const char *part, const char *text)
 {
    Edje_Real_Part *rp;
+   Edje *ed;
+
+   ed = efl_data_scope_get(obj, EDJE_OBJECT_CLASS);
 
    if ((!ed) || (!part)) return;
    rp = _edje_real_part_recursive_get(&ed, part);

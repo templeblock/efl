@@ -615,5 +615,35 @@ EAPI Eina_Bool edje_object_part_text_set(const Edje_Object *obj, const char *par
  */
 EAPI const char * edje_object_part_text_get(const Edje_Object *obj, const char *part);
 
+/**
+ * @brief Append text for an object part
+ *
+ * This function inserts the text for an object part at the end.
+ * It does not move the cursor.
+ *
+ * @param[in] part The part name
+ * @param[in] The text string
+ *
+ * @see edje_object_part_text_insert
+ *
+ * @ingroup Edje_Object
+ */
+EAPI void edje_object_part_text_append(Edje_Object *obj, const char *part, const char *text);
+
+/**
+ * @brief Append text for an object part
+ *
+ * This function inserts the text for an object part at the end.
+ * It cursor is then advanced one position forward.
+ *
+ * @param[in] part The part name
+ * @param[in] The text string
+ *
+ * @see edje_object_part_text_append
+ *
+ * @ingroup Edje_Object
+ */
+
+EAPI void edje_object_part_text_insert(Edje_Object *obj, const char *part, const char *text);
 #include "edje_object.eo.legacy.h"
 #include "edje_edit.eo.legacy.h"
