@@ -2668,10 +2668,13 @@ _edje_object_part_text_cursor_down(Eo *obj EINA_UNUSED, Edje *ed, const char *pa
    return EINA_FALSE;
 }
 
-EOLIAN void
-_edje_object_part_text_cursor_begin_set(Eo *obj EINA_UNUSED, Edje *ed, const char *part, Edje_Cursor cur)
+EAPI void
+edje_object_part_text_cursor_begin_set(Eo *obj EINA_UNUSED, const char *part, Edje_Cursor cur)
 {
    Edje_Real_Part *rp;
+   Edje *ed;
+
+   ed = efl_data_scope_get(obj, EDJE_OBJECT_CLASS);
 
    if ((!ed) || (!part)) return;
    rp = _edje_real_part_recursive_get(&ed, part);
@@ -2682,10 +2685,13 @@ _edje_object_part_text_cursor_begin_set(Eo *obj EINA_UNUSED, Edje *ed, const cha
      }
 }
 
-EOLIAN void
-_edje_object_part_text_cursor_end_set(Eo *obj EINA_UNUSED, Edje *ed, const char *part, Edje_Cursor cur)
+EAPI void
+edje_object_part_text_cursor_end_set(Eo *obj EINA_UNUSED, const char *part, Edje_Cursor cur)
 {
    Edje_Real_Part *rp;
+   Edje *ed;
+
+   ed = efl_data_scope_get(obj, EDJE_OBJECT_CLASS);
 
    if ((!ed) || (!part)) return;
    rp = _edje_real_part_recursive_get(&ed, part);
@@ -2710,10 +2716,13 @@ _edje_object_part_text_cursor_copy(Eo *obj EINA_UNUSED, Edje *ed, const char *pa
      }
 }
 
-EOLIAN void
-_edje_object_part_text_cursor_line_begin_set(Eo *obj EINA_UNUSED, Edje *ed, const char *part, Edje_Cursor cur)
+EAPI void
+edje_object_part_text_cursor_line_begin_set(Eo *obj EINA_UNUSED, const char *part, Edje_Cursor cur)
 {
    Edje_Real_Part *rp;
+   Edje *ed;
+
+   ed = efl_data_scope_get(obj, EDJE_OBJECT_CLASS);
 
    if ((!ed) || (!part)) return;
    rp = _edje_real_part_recursive_get(&ed, part);
@@ -2724,10 +2733,13 @@ _edje_object_part_text_cursor_line_begin_set(Eo *obj EINA_UNUSED, Edje *ed, cons
      }
 }
 
-EOLIAN void
-_edje_object_part_text_cursor_line_end_set(Eo *obj EINA_UNUSED, Edje *ed, const char *part, Edje_Cursor cur)
+EAPI void
+edje_object_part_text_cursor_line_end_set(Eo *obj EINA_UNUSED, const char *part, Edje_Cursor cur)
 {
    Edje_Real_Part *rp;
+   Edje *ed;
+
+   ed = efl_data_scope_get(obj, EDJE_OBJECT_CLASS);
 
    if ((!ed) || (!part)) return;
    rp = _edje_real_part_recursive_get(&ed, part);

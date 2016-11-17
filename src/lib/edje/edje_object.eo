@@ -1313,46 +1313,6 @@ class Edje.Object (Efl.Canvas.Group.Clipped, Efl.File, Efl.Container, Efl.Part,
          }
          return: bool; [[$true if the visible character is hidden. $false if there is no visible character or the object is not set for password mode.]]
       }
-      @property part_text_cursor_begin {
-         set {
-            [[Moves the cursor to the beginning of the text part
-              \@ref evas_textblock_cursor_paragraph_first]]
-         }
-         values {
-            part: string; [[The part name]]
-            cur: Edje.Cursor; [[The edje cursor to work on]]
-         }
-      }
-      @property part_text_cursor_end {
-         set {
-            [[Moves the cursor to the end of the text part.
-              \@ref evas_textblock_cursor_paragraph_last]]
-         }
-         values {
-            part: string; [[The part name]]
-            cur: Edje.Cursor; [[The edje cursor to work on]]
-         }
-      }
-      @property part_text_cursor_line_begin {
-         set {
-            [[Move the cursor to the beginning of the line.
-              \@ref evas_textblock_cursor_line_char_first]]
-         }
-         values {
-            part: string; [[The part name]]
-            cur: Edje.Cursor; [[The edje cursor to work on]]
-         }
-      }
-      @property part_text_cursor_line_end {
-         set {
-            [[Move the cursor to the end of the line.
-              \@ref evas_textblock_cursor_line_char_last]]
-         }
-         values {
-            part: string; [[The part name]]
-            cur: Edje.Cursor; [[The edje cursor to work on]]
-         }
-      }
       part_text_cursor_prev {
          [[Moves the cursor to the previous char
            \@ref evas_textblock_cursor_char_prev]]

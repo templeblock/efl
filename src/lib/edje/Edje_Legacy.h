@@ -698,5 +698,44 @@ EAPI const Eina_List *edje_object_part_text_item_list_get(Eo *obj, const char *p
  */
 EAPI Eina_Bool edje_object_part_text_item_geometry_get(Eo *obj, const char *part, const char *item, Evas_Coord *cx, Evas_Coord *cy, Evas_Coord *cw, Evas_Coord *ch);
 
+/*
+ * @brief Moves the cursor to the beginning of the text part
+ *
+ * @param[in] part   The part name
+ * @param[in] cursor The cursor type
+ *
+ * @ref evas_textblock_cursor_paragraph_first
+ */
+EAPI void edje_object_part_text_cursor_begin_set(Eo *obj EINA_UNUSED, const char *part, Edje_Cursor cur);
+
+/*
+ * @brief Moves the cursor to the end of the text part
+ *
+ * @param[in] part   The part name
+ * @param[in] cursor The cursor type
+ *
+ * @ref evas_textblock_cursor_paragraph_last
+ */
+EAPI void edje_object_part_text_cursor_end_set(Eo *obj EINA_UNUSED, const char *part, Edje_Cursor cur);
+
+/*
+ * @brief Moves the cursor to the beginning of the line in the text part
+ *
+ * @param[in] part   The part name
+ * @param[in] cursor The cursor type
+ *
+ * @ref evas_textblock_cursor_paragraph_line_char_first
+ */
+EAPI void edje_object_part_text_cursor_line_begin_set(Eo *obj EINA_UNUSED, const char *part, Edje_Cursor cur);
+
+/*
+ * @brief Moves the cursor to the end of the line in the text part
+ *
+ * @param[in] part   The part name
+ * @param[in] cursor The cursor type
+ *
+ * @ref evas_textblock_cursor_paragraph_line_char_last
+ */
+EAPI void edje_object_part_text_cursor_line_end_set(Eo *obj EINA_UNUSED, const char *part, Edje_Cursor cur);
 #include "edje_object.eo.legacy.h"
 #include "edje_edit.eo.legacy.h"
