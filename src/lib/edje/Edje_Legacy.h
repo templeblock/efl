@@ -694,7 +694,7 @@ EAPI const Eina_List *edje_object_part_text_item_list_get(Eo *obj, const char *p
  * @param[out] cw The w geometry
  * @param[out] ch The h geometry
  *
- * @return List of the given anchor's rectangles
+ * @return @c EINA_TRUE, on success or @c EINA_FALSE on failue
  */
 EAPI Eina_Bool edje_object_part_text_item_geometry_get(Eo *obj, const char *part, const char *item, Evas_Coord *cx, Evas_Coord *cy, Evas_Coord *cw, Evas_Coord *ch);
 
