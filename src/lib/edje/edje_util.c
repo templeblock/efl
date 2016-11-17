@@ -2431,10 +2431,13 @@ edje_object_part_text_append(Eo *obj, const char *part, const char *text)
      ed->text_change.func(ed->text_change.data, obj, part);
 }
 
-EOLIAN const Eina_List *
-_edje_object_part_text_anchor_list_get(Eo *obj EINA_UNUSED, Edje *ed, const char *part)
+EAPI const Eina_List *
+edje_object_part_text_anchor_list_get(Eo *obj EINA_UNUSED, const char *part)
 {
    Edje_Real_Part *rp;
+   Edje *ed;
+
+   ed = efl_data_scope_get(obj, EDJE_OBJECT_CLASS);
 
    if ((!ed) || (!part)) return NULL;
    rp = _edje_real_part_recursive_get(&ed, part);
@@ -2445,10 +2448,13 @@ _edje_object_part_text_anchor_list_get(Eo *obj EINA_UNUSED, Edje *ed, const char
    return NULL;
 }
 
-EOLIAN const Eina_List *
-_edje_object_part_text_anchor_geometry_get(Eo *obj EINA_UNUSED, Edje *ed, const char *part, const char *anchor)
+EAPI const Eina_List *
+edje_object_part_text_anchor_geometry_get(Eo *obj EINA_UNUSED, const char *part, const char *anchor)
 {
    Edje_Real_Part *rp;
+   Edje *ed;
+
+   ed = efl_data_scope_get(obj, EDJE_OBJECT_CLASS);
 
    if ((!ed) || (!part)) return NULL;
    rp = _edje_real_part_recursive_get(&ed, part);
@@ -2459,10 +2465,13 @@ _edje_object_part_text_anchor_geometry_get(Eo *obj EINA_UNUSED, Edje *ed, const 
    return NULL;
 }
 
-EOLIAN const Eina_List *
-_edje_object_part_text_item_list_get(Eo *obj EINA_UNUSED, Edje *ed, const char *part)
+EAPI const Eina_List *
+edje_object_part_text_item_list_get(Eo *obj EINA_UNUSED, const char *part)
 {
    Edje_Real_Part *rp;
+   Edje *ed;
+
+   ed = efl_data_scope_get(obj, EDJE_OBJECT_CLASS);
 
    if ((!ed) || (!part)) return NULL;
    rp = _edje_real_part_recursive_get(&ed, part);
@@ -2473,10 +2482,13 @@ _edje_object_part_text_item_list_get(Eo *obj EINA_UNUSED, Edje *ed, const char *
    return NULL;
 }
 
-EOLIAN Eina_Bool
-_edje_object_part_text_item_geometry_get(Eo *obj EINA_UNUSED, Edje *ed, const char *part, const char *item, Evas_Coord *cx, Evas_Coord *cy, Evas_Coord *cw, Evas_Coord *ch)
+EAPI Eina_Bool
+edje_object_part_text_item_geometry_get(Eo *obj EINA_UNUSED, const char *part, const char *item, Evas_Coord *cx, Evas_Coord *cy, Evas_Coord *cw, Evas_Coord *ch)
 {
    Edje_Real_Part *rp;
+   Edje *ed;
+
+   ed = efl_data_scope_get(obj, EDJE_OBJECT_CLASS);
 
    if ((!ed) || (!part)) return EINA_FALSE;
    rp = _edje_real_part_recursive_get(&ed, part);

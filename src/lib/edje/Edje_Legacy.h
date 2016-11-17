@@ -643,7 +643,60 @@ EAPI void edje_object_part_text_append(Edje_Object *obj, const char *part, const
  *
  * @ingroup Edje_Object
  */
-
 EAPI void edje_object_part_text_insert(Edje_Object *obj, const char *part, const char *text);
+
+/**
+ * @brief Return a list of anchor names
+ *
+ * This function returns a list of char anchor names.
+ *
+ * @param[in] part The part name
+ *
+ * @return List of all anchor objects
+ */
+EAPI const Eina_List *edje_object_part_text_anchor_list_get(Eo *obj, const char *part);
+
+/**
+ * @brief Return a list of Evas_Textblock_Rectangle anchor rectangles
+ *
+ * This function return a list of Evas_Textblock_Rectangle anchor
+ * rectangles.
+ *
+ * This function returns a list of char anchor names.
+ *
+ * @param[in] part The part name
+ * @param[in] anchor The anchor name
+ *
+ * @return List of the given anchor's rectangles
+ */
+EAPI const Eina_List *edje_object_part_text_anchor_geometry_get(Eo *obj, const char *part, const char *anchor);
+
+/**
+ * @brief Return a list of char item names
+ *
+ * This function returns a list of char item names.
+ *
+ * @param[in] part The part name
+ *
+ * @return List of all items of part
+ */
+EAPI const Eina_List *edje_object_part_text_item_list_get(Eo *obj, const char *part);
+
+/**
+ * @brief Return item geometry
+ *
+ * This functions queries a given item and returns its geometry.
+ *
+ * @param[in] part The part name
+ * @param[in] item The item name
+ * @param[out] cx The x geometry
+ * @param[out] cy The y geometry
+ * @param[out] cw The w geometry
+ * @param[out] ch The h geometry
+ *
+ * @return List of the given anchor's rectangles
+ */
+EAPI Eina_Bool edje_object_part_text_item_geometry_get(Eo *obj, const char *part, const char *item, Evas_Coord *cx, Evas_Coord *cy, Evas_Coord *cw, Evas_Coord *ch);
+
 #include "edje_object.eo.legacy.h"
 #include "edje_edit.eo.legacy.h"
