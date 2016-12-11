@@ -243,7 +243,6 @@ struct _Mod_Api
 };
 
 static void _create_selection_handlers(Evas_Object *obj, Efl_Ui_Text_Data *sd, const char *file);
-static void _magnifier_move(void *data);
 static void _update_decorations(Eo *obj);
 static void _create_text_cursors(Eo *obj, Efl_Ui_Text_Data *sd);
 static void _efl_ui_text_changed_cb(void *data EINA_UNUSED, const Efl_Event *event);
@@ -1657,175 +1656,14 @@ _menu_call(Evas_Object *obj)
      }
 }
 
-static void
-_magnifier_proxy_update(void *data, Evas *e EINA_UNUSED, Evas_Object *obj EINA_UNUSED, void *event_info EINA_UNUSED)
-{
-   _magnifier_move(data);
-}
-
-static void
-_magnifier_create(void *data)
-{
-   EFL_UI_TEXT_DATA_GET(data, sd);
-
-   double scale = _elm_config->magnifier_scale;
-   Evas *e;
-   Evas_Coord w, h, mw, mh;
-
-   evas_object_del(sd->mgf_proxy);
-   evas_object_del(sd->mgf_bg);
-   evas_object_del(sd->mgf_clip);
-
-   e = evas_object_evas_get(data);
-
-   //Bg
-   sd->mgf_bg = edje_object_add(e);
-   _elm_theme_object_set(data, sd->mgf_bg, "entry", "magnifier", "default");
-   evas_object_show(sd->mgf_bg);
-
-   //Proxy
-   sd->mgf_proxy = evas_object_image_add(e);
-   evas_object_event_callback_add(sd->mgf_proxy, EVAS_CALLBACK_RESIZE,
-                                  _magnifier_proxy_update, data);
-   evas_object_event_callback_add(sd->mgf_proxy, EVAS_CALLBACK_MOVE,
-                                  _magnifier_proxy_update, data);
-   edje_object_part_swallow(sd->mgf_bg, "elm.swallow.content", sd->mgf_proxy);
-   evas_object_image_source_set(sd->mgf_proxy, data);
-   evas_object_geometry_get(data, NULL, NULL, &w, &h);
-
-   //Clipper
-   sd->mgf_clip = evas_object_rectangle_add(e);
-   evas_object_color_set(sd->mgf_clip, 0, 0, 0, 0);
-   evas_object_show(sd->mgf_clip);
-   evas_object_clip_set(sd->mgf_proxy, sd->mgf_clip);
-
-   mw = (Evas_Coord)(scale * (float) w);
-   mh = (Evas_Coord)(scale * (float) h);
-   if ((mw <= 0) || (mh <= 0)) return;
-
-   evas_object_layer_set(sd->mgf_bg, EVAS_LAYER_MAX);
-   evas_object_layer_set(sd->mgf_proxy, EVAS_LAYER_MAX);
-}
-
-static void
-_magnifier_move(void *data)
-{
-   EFL_UI_TEXT_DATA_GET(data, sd);
-
-   Evas_Coord x, y, w, h;
-   Evas_Coord px, py, pw, ph;
-   Evas_Coord cx, cy, ch;
-   Evas_Coord ex, ey;
-   Evas_Coord mx, my, mw, mh;
-   Evas_Coord diffx = 0;
-   Evas_Object *top;
-   double fx, fy, fw, fh;
-   double scale = _elm_config->magnifier_scale;
-
-   edje_object_part_text_cursor_geometry_get(sd->entry_edje, "elm.text",
-                                             &cx, &cy, NULL, &ch);
-   if (sd->scroll)
-     {
-        Evas_Coord ox, oy;
-        evas_object_geometry_get(sd->scr_edje, &ex, &ey, NULL, NULL);
-        elm_interface_scrollable_content_pos_get(data, &ox, &oy);
-        ex -= ox;
-        ey -= oy;
-     }
-   else
-     {
-        evas_object_geometry_get(data, &ex, &ey, NULL, NULL);
-     }
-   cx += ex;
-   cy += ey;
-
-   //Move the Magnifier
-   edje_object_parts_extends_calc(sd->mgf_bg, &x, &y, &w, &h);
-   evas_object_move(sd->mgf_bg, cx - x - (w / 2), cy - y - h);
-
-   mx = cx - x - (w / 2);
-   my = cy - y - h;
-   mw = w;
-   mh = h;
-
-   // keep magnifier inside window
-   top = elm_widget_top_get(data);
-   if (top && efl_isa(top, EFL_UI_WIN_CLASS))
-     {
-        Evas_Coord wh, ww;
-        evas_object_geometry_get(top, NULL, NULL, &ww, &wh);
-        if (mx < 0)
-          {
-             diffx = mx;
-             mx = 0;
-          }
-        if (mx + mw > ww)
-          {
-             diffx = - (ww - (mx + mw));
-             mx = ww - mw;
-          }
-        if (my < 0)
-          my = 0;
-        if (my + mh > wh)
-          my = wh - mh;
-        evas_object_move(sd->mgf_bg, mx, my);
-     }
-
-   //Set the Proxy Render Area
-   evas_object_geometry_get(data, &x, &y, &w, &h);
-   evas_object_geometry_get(sd->mgf_proxy, &px, &py, &pw, &ph);
-
-   fx = -((cx - x) * scale) + (pw * 0.5) + diffx;
-   fy = -((cy - y) * scale) + (ph * 0.5) - (ch * 0.5 * scale);
-   fw = w * scale;
-   fh = h * scale;
-   evas_object_image_fill_set(sd->mgf_proxy, fx, fy, fw, fh);
-
-   //Update Clipper Area
-   int tx = fx;
-   int ty = fy;
-   int tw = fw;
-   int th = fh;
-   if (tx > 0) px += tx;
-   if (ty > 0) py += ty;
-   if (-(tx - pw) > tw) pw -= (-((tx - pw) + tw));
-   if (-(ty - ph) > th) ph -= (-((ty - ph) + th));
-   evas_object_move(sd->mgf_clip, px, py);
-   evas_object_resize(sd->mgf_clip, pw, ph);
-}
-
-static void
-_magnifier_hide(void *data)
-{
-   EFL_UI_TEXT_DATA_GET(data, sd);
-   edje_object_signal_emit(sd->mgf_bg, "elm,action,hide,magnifier", "elm");
-   elm_widget_scroll_freeze_pop(data);
-   evas_object_hide(sd->mgf_clip);
-}
-
-static void
-_magnifier_show(void *data)
-{
-   EFL_UI_TEXT_DATA_GET(data, sd);
-   edje_object_signal_emit(sd->mgf_bg, "elm,action,show,magnifier", "elm");
-   elm_widget_scroll_freeze_push(data);
-   evas_object_show(sd->mgf_clip);
-}
-
 static Eina_Bool
 _long_press_cb(void *data)
 {
    EFL_UI_TEXT_DATA_GET(data, sd);
 
-   if (_elm_config->magnifier_enable)
-     {
-        _magnifier_create(data);
-        _magnifier_show(data);
-        _magnifier_move(data);
-     }
    /* Context menu will not appear if context menu disabled is set
     * as false on a long press callback */
-   else if (!_elm_config->context_menu_disabled &&
+   if (!_elm_config->context_menu_disabled &&
             (!_elm_config->desktop_entry))
      _menu_call(data);
 
@@ -1939,25 +1777,14 @@ _mouse_up_cb(void *data,
         /* Since context menu disabled flag was checked at long press start while mouse
          * down, hence the same should be checked at mouse up from a long press
          * as well */
-        if ((sd->long_pressed) && (_elm_config->magnifier_enable))
+        top = elm_widget_top_get(data);
+        if (top)
           {
-             _magnifier_hide(data);
-             if (!_elm_config->context_menu_disabled)
-               {
-                  _menu_call(data);
-               }
-          }
-        else
-          {
-             top = elm_widget_top_get(data);
-             if (top)
-               {
-                  if (efl_isa(top, EFL_UI_WIN_CLASS))
-                    top_is_win = EINA_TRUE;
+             if (efl_isa(top, EFL_UI_WIN_CLASS))
+                top_is_win = EINA_TRUE;
 
-                  if (top_is_win)
-                    elm_win_keyboard_mode_set(top, ELM_WIN_KEYBOARD_ON);
-               }
+             if (top_is_win)
+                elm_win_keyboard_mode_set(top, ELM_WIN_KEYBOARD_ON);
           }
      }
   /* Since context menu disabled flag was checked at mouse right key down,
@@ -1981,28 +1808,6 @@ _mouse_move_cb(void *data,
    EFL_UI_TEXT_DATA_GET(data, sd);
 
    if (sd->disabled) return;
-   if (ev->buttons == 1)
-     {
-        if ((sd->long_pressed) && (_elm_config->magnifier_enable))
-          {
-             Evas_Coord x, y;
-             Eina_Bool rv;
-
-             evas_object_geometry_get(sd->entry_edje, &x, &y, NULL, NULL);
-             rv = edje_object_part_text_cursor_coord_set
-               (sd->entry_edje, "elm.text", EDJE_CURSOR_USER,
-               ev->cur.canvas.x - x, ev->cur.canvas.y - y);
-             if (rv)
-               {
-                  edje_object_part_text_cursor_copy
-                    (sd->entry_edje, "elm.text", EDJE_CURSOR_USER, EDJE_CURSOR_MAIN);
-               }
-             else
-               WRN("Warning: Cannot move cursor");
-
-             _magnifier_move(data);
-          }
-     }
    if (!sd->sel_mode)
      {
         if (ev->event_flags & EVAS_EVENT_FLAG_ON_HOLD)
@@ -2985,12 +2790,6 @@ _selection_handlers_offset_calc(Evas_Object *obj, Evas_Object *handler, Evas_Coo
 
    ELM_SAFE_FREE(sd->longpress_timer, ecore_timer_del);
    sd->long_pressed = EINA_FALSE;
-   if (_elm_config->magnifier_enable)
-     {
-        _magnifier_create(obj);
-        _magnifier_show(obj);
-        _magnifier_move(obj);
-     }
 }
 
 static void
@@ -3040,8 +2839,6 @@ _start_handler_mouse_up_cb(void *data,
    EFL_UI_TEXT_DATA_GET(data, sd);
 
    sd->start_handler_down = EINA_FALSE;
-   if (_elm_config->magnifier_enable)
-     _magnifier_hide(data);
    /* Context menu should not appear, even in case of selector mode, if the
     * flag is false (disabled) */
    if ((!_elm_config->context_menu_disabled) &&
@@ -3076,8 +2873,6 @@ _start_handler_mouse_move_cb(void *data,
 
    ELM_SAFE_FREE(sd->longpress_timer, ecore_timer_del);
    sd->long_pressed = EINA_FALSE;
-   if (_elm_config->magnifier_enable)
-     _magnifier_move(data);
 }
 
 static void
@@ -3127,8 +2922,6 @@ _end_handler_mouse_up_cb(void *data,
    EFL_UI_TEXT_DATA_GET(data, sd);
 
    sd->end_handler_down = EINA_FALSE;
-   if (_elm_config->magnifier_enable)
-     _magnifier_hide(data);
    /* Context menu appear was checked in case of selector start, and hence
     * the same should be checked at selector end as well */
    if ((!_elm_config->context_menu_disabled) &&
@@ -3161,8 +2954,6 @@ _end_handler_mouse_move_cb(void *data,
    efl_canvas_text_cursor_position_set(efl_canvas_text_cursor_get(data), pos);
    ELM_SAFE_FREE(sd->longpress_timer, ecore_timer_del);
    sd->long_pressed = EINA_FALSE;
-   if (_elm_config->magnifier_enable)
-     _magnifier_move(data);
 }
 
 EOLIAN static void
