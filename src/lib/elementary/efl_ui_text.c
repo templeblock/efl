@@ -422,25 +422,6 @@ _efl_ui_text_guide_update(Evas_Object *obj,
 }
 
 static void
-_validate(Evas_Object *obj)
-{
-   EFL_UI_TEXT_DATA_GET(obj, sd);
-   Eina_Bool res;
-   Elm_Validate_Content vc;
-   Eina_Strbuf *buf;
-
-   if (sd->validators == 0) return;
-
-   vc.text = edje_object_part_text_get(sd->entry_edje, "elm.text");
-   res = efl_event_callback_legacy_call(obj, EFL_UI_TEXT_EVENT_VALIDATE, (void *)&vc);
-   buf = eina_strbuf_new();
-   eina_strbuf_append_printf(buf, "validation,%s,%s", vc.signal, res == EINA_FALSE ? "fail" : "pass");
-   edje_object_signal_emit(sd->scr_edje, eina_strbuf_string_get(buf), "elm");
-   eina_tmpstr_del(vc.signal);
-   eina_strbuf_free(buf);
-}
-
-static void
 _filter_free(Elm_Entry_Markup_Filter *tf)
 {
    if (tf->func == elm_entry_filter_limit_size)
@@ -1143,7 +1124,6 @@ _efl_ui_text_elm_widget_on_focus(Eo *obj, Efl_Ui_Text_Data *sd, Elm_Object_Item 
         if (top && top_is_win)
           elm_win_keyboard_mode_set(top, ELM_WIN_KEYBOARD_ON);
         efl_event_callback_legacy_call(obj, ELM_WIDGET_EVENT_FOCUSED, NULL);
-        _validate(obj);
      }
    else
      {
@@ -1881,7 +1861,6 @@ _entry_changed_handle(void *data,
         else
           _efl_ui_text_guide_update(data, EINA_FALSE);
      }
-   _validate(data);
 
    /* callback - this could call callbacks that delete the
     * entry... thus... any access to sd after this could be
