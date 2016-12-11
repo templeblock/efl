@@ -203,10 +203,6 @@ class Efl.Ui.Text (Elm.Layout, Elm.Interface_Scrollable, Efl.Ui.Clickable,
       selection_paste {
          [[This executes a "paste" action in the entry.]]
       }
-      cursor_selection_end {
-         [[This ends a selection within the entry as though
-           the user had just released the mouse button while making a selection.]]
-      }
       selection_cut {
          [[This executes a "cut" action on the selected text in the entry.]]
       }

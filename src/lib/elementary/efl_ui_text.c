@@ -3460,12 +3460,6 @@ _efl_ui_text_select_none(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd)
 }
 
 EOLIAN static void
-_efl_ui_text_cursor_selection_end(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd)
-{
-   edje_object_part_text_select_extend(sd->entry_edje, "elm.text");
-}
-
-EOLIAN static void
 _efl_ui_text_selection_cut(Eo *obj, Efl_Ui_Text_Data *sd)
 {
    if ((sd->password)) return;
