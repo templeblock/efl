@@ -75,26 +75,6 @@ class Efl.Ui.Text (Elm.Layout, Elm.Interface_Scrollable, Efl.Ui.Clickable,
             scroll: bool; [[$true if it is to be scrollable, $false otherwise.]]
          }
       }
-      @property input_panel_show_on_demand {
-         set {
-            [[Set the attribute to show the input panel in case of only an user's explicit Mouse Up event.
-              It doesn't request to show the input panel even though it has focus.
-
-              @since 1.9
-            ]]
-         }
-         get {
-            [[Get the attribute to show the input panel in case of only an user's explicit Mouse Up event.
-
-              @since 1.9
-            ]]
-         }
-         values {
-            ondemand: bool; [[If $true, the input panel will be shown in case of only Mouse up event.
-            (Focus event will be ignored.)
-            ]]
-         }
-      }
       @property context_menu_disabled {
          set {
             [[This disables the entry's contextual (longpress) menu.]]
@@ -130,20 +110,6 @@ class Efl.Ui.Text (Elm.Layout, Elm.Interface_Scrollable, Efl.Ui.Clickable,
             cnp_mode: Elm.Cnp_Mode; [[One of #Elm_Cnp_Mode: #ELM_CNP_MODE_MARKUP, #ELM_CNP_MODE_NO_IMAGE, #ELM_CNP_MODE_PLAINTEXT.]]
          }
       }
-      @property input_panel_language {
-         set {
-            [[Set the language mode of the input panel.
-
-              This API can be used if you want to show the alphabet keyboard mode.
-            ]]
-         }
-         get {
-            [[Get the language mode of the input panel.]]
-         }
-         values {
-            lang: Elm.Input.Panel.Lang; [[Language to be set to the input panel.]]
-         }
-      }
       @property selection_handler_disabled {
          set {
             [[This disabled the entry's selection handlers.]]
@@ -154,23 +120,6 @@ class Efl.Ui.Text (Elm.Layout, Elm.Interface_Scrollable, Efl.Ui.Clickable,
          }
          values {
             disabled: bool; [[If $true, the selection handlers are disabled.]]
-         }
-      }
-      @property input_panel_layout_variation {
-         set {
-            [[Set the input panel layout variation of the entry
-
-              @since 1.8
-            ]]
-         }
-         get {
-            [[Get the input panel layout variation of the entry
-
-              @since 1.8
-            ]]
-         }
-         values {
-            variation: int; [[Layout variation type.]]
          }
       }
       @property autocapital_type {
@@ -199,18 +148,6 @@ class Efl.Ui.Text (Elm.Layout, Elm.Interface_Scrollable, Efl.Ui.Clickable,
             password: bool; [[If true, password mode is enabled.]]
          }
       }
-      @property input_panel_return_key_disabled {
-         set {
-            [[Set the return key on the input panel to be disabled.]]
-         }
-         get {
-            [[Get whether the return key on the input panel should be disabled or not.]]
-         }
-         values {
-            disabled: bool; [[The state to put in in: $true for
-            disabled, $false for enabled.]]
-         }
-      }
       @property prediction_allow {
          set {
             [[Set whether the entry should allow to use the text prediction.]]
@@ -233,55 +170,6 @@ class Efl.Ui.Text (Elm.Layout, Elm.Interface_Scrollable, Efl.Ui.Clickable,
             hints: Elm.Input.Hints; [[Input hint.]]
          }
       }
-      @property input_panel_layout {
-         set {
-            [[Set the input panel layout of the entry.]]
-         }
-         get {
-            [[Get the input panel layout of the entry.]]
-         }
-         values {
-            layout: Elm.Input.Panel.Layout(Elm.Input.Panel.Layout.invalid); [[Layout type.]]
-         }
-      }
-      @property input_panel_return_key_type {
-         set {
-            [[Set the "return" key type. This type is used to set string or icon on the "return" key of the input panel.
-
-              An input panel displays the string or icon associated with this type.
-            ]]
-         }
-         get {
-            [[Get the "return" key type.]]
-         }
-         values {
-            return_key_type: Elm.Input.Panel.Return_Key.Type; [[The type of "return" key on the input panel.]]
-         }
-      }
-      @property input_panel_enabled {
-         set {
-            [[Sets the attribute to show the input panel automatically.]]
-         }
-         get {
-            [[Get the attribute to show the input panel automatically.]]
-         }
-         values {
-            enabled: bool; [[If $true, the input panel is appeared when entry is clicked or has a focus.]]
-         }
-      }
-      @property input_panel_return_key_autoenabled {
-         set {
-            [[Set whether the return key on the input panel is disabled automatically when entry has no text.
-
-              If $enabled is $true, The return key on input panel is disabled when the entry has no text.
-              The return key on the input panel is automatically enabled when the entry has text.
-              The default value is $false.
-            ]]
-         }
-         values {
-            enabled: bool; [[If $enabled is $true, the return key is automatically disabled when the entry has no text.]]
-         }
-      }
       item_provider_prepend {
          [[This prepends a custom item provider to the list for that entry
 
@@ -290,13 +178,6 @@ class Efl.Ui.Text (Elm.Layout, Elm.Interface_Scrollable, Efl.Ui.Clickable,
             @in func: Elm_Entry_Item_Provider_Cb; [[The function called to provide the item object.]]
             @in data: void_ptr @optional; [[The data passed to $func.]]
          }
-      }
-      input_panel_show {
-         [[Show the input panel (virtual keyboard) based on the input panel property of entry such as layout, autocapital types, and so on.
-
-           Note that input panel is shown or hidden automatically according to the focus state of entry widget.
-           This API can be used in the case of manually controlling by using @.input_panel_enabled.set(en, $false).
-         ]]
       }
       selection_copy {
          [[This executes a "copy" action on the selected text in the entry.]]
@@ -319,34 +200,8 @@ class Efl.Ui.Text (Elm.Layout, Elm.Interface_Scrollable, Efl.Ui.Clickable,
            See also @.context_menu_item_add.
          ]]
       }
-      input_panel_imdata_set {
-         [[Set the input panel-specific data to deliver to the input panel.
-
-           This API is used by applications to deliver specific data to the input panel.
-           The data format MUST be negotiated by both application and the input panel.
-           The size and format of data are defined by the input panel.
-         ]]
-         params {
-            @in data: const(void_ptr); [[The specific data to be set to the input panel.]]
-            @in len: int; [[The length of data, in bytes, to send to the input panel.]]
-         }
-      }
-      input_panel_imdata_get @const {
-         [[Get the specific data of the current input panel.]]
-         params {
-            @inout data: void; [[The specific data to be got from the input panel.]]
-            @out len: int; [[The length of data.]]
-         }
-      }
       selection_paste {
          [[This executes a "paste" action in the entry.]]
-      }
-      input_panel_hide {
-         [[Hide the input panel (virtual keyboard).
-
-           Note that input panel is shown or hidden automatically according to the focus state of entry widget.
-           This API can be used in the case of manually controlling by using @.input_panel_enabled.set(en, $false)
-         ]]
       }
       cursor_selection_end {
          [[This ends a selection within the entry as though

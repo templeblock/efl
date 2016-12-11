@@ -70,15 +70,9 @@ struct _Efl_Ui_Text_Data
    int                                   cursor_pos;
    Elm_Scroller_Policy                   policy_h, policy_v;
    Elm_Wrap_Type                         line_wrap;
-   Elm_Input_Panel_Layout                input_panel_layout;
    Elm_Autocapital_Type                  autocapital_type;
-   Elm_Input_Panel_Lang                  input_panel_lang;
-   Elm_Input_Panel_Return_Key_Type       input_panel_return_key_type;
    Elm_Input_Hints                       input_hints;
    Eo                                   *sel_handler_cursor;
-   void                                 *input_panel_imdata;
-   int                                   input_panel_imdata_len;
-   int                                   input_panel_layout_variation;
    int                                   validators;
    struct
      {
@@ -91,14 +85,12 @@ struct _Efl_Ui_Text_Data
    Elm_Cnp_Mode                          cnp_mode;
    Elm_Sel_Format                        drop_format;
 
-   Eina_Bool                             input_panel_return_key_disabled : 1;
    Eina_Bool                             drag_selection_asked : 1;
    Eina_Bool                             sel_handler_disabled : 1;
    Eina_Bool                             start_handler_down : 1;
    Eina_Bool                             start_handler_shown : 1;
    Eina_Bool                             end_handler_down : 1;
    Eina_Bool                             end_handler_shown : 1;
-   Eina_Bool                             input_panel_enable : 1;
    Eina_Bool                             prediction_allow : 1;
    Eina_Bool                             selection_asked : 1;
    Eina_Bool                             auto_return_key : 1;
@@ -124,7 +116,6 @@ struct _Efl_Ui_Text_Data
    Eina_Bool                             sel_allow : 1;
    Eina_Bool                             changed : 1;
    Eina_Bool                             scroll : 1;
-   Eina_Bool                             input_panel_show_on_demand : 1;
    Eina_Bool                             anchors_updated : 1;
    Eina_Bool                             test_bit : 1;
 };
@@ -944,27 +935,12 @@ _efl_ui_text_elm_widget_theme_apply(Eo *obj, Efl_Ui_Text_Data *sd)
    if (elm_widget_disabled_get(obj))
      edje_object_signal_emit(sd->entry_edje, "elm,state,disabled", "elm");
 
-   edje_object_part_text_input_panel_layout_set
-     (sd->entry_edje, "elm.text", (Edje_Input_Panel_Layout)sd->input_panel_layout);
-   edje_object_part_text_input_panel_layout_variation_set
-     (sd->entry_edje, "elm.text", sd->input_panel_layout_variation);
    edje_object_part_text_autocapital_type_set
      (sd->entry_edje, "elm.text", (Edje_Text_Autocapital_Type)sd->autocapital_type);
    edje_object_part_text_prediction_allow_set
      (sd->entry_edje, "elm.text", sd->prediction_allow);
    edje_object_part_text_input_hint_set
      (sd->entry_edje, "elm.text", (Edje_Input_Hints)sd->input_hints);
-   edje_object_part_text_input_panel_enabled_set
-     (sd->entry_edje, "elm.text", sd->input_panel_enable);
-   edje_object_part_text_input_panel_imdata_set
-     (sd->entry_edje, "elm.text", sd->input_panel_imdata,
-     sd->input_panel_imdata_len);
-   edje_object_part_text_input_panel_return_key_type_set
-     (sd->entry_edje, "elm.text", (Edje_Input_Panel_Return_Key_Type)sd->input_panel_return_key_type);
-   edje_object_part_text_input_panel_return_key_disabled_set
-     (sd->entry_edje, "elm.text", sd->input_panel_return_key_disabled);
-   edje_object_part_text_input_panel_show_on_demand_set
-     (sd->entry_edje, "elm.text", sd->input_panel_show_on_demand);
 
    // elm_entry_cursor_pos_set -> cursor,changed -> widget_show_region_set
    // -> smart_objects_calculate will call all smart calculate functions,
@@ -1145,21 +1121,6 @@ _efl_ui_text_elm_layout_sizing_eval(Eo *obj, Efl_Ui_Text_Data *sd)
    evas_event_thaw_eval(evas_object_evas_get(obj));
 }
 
-static void
-_return_key_enabled_check(Evas_Object *obj)
-{
-   Eina_Bool return_key_disabled = EINA_FALSE;
-
-   EFL_UI_TEXT_DATA_GET(obj, sd);
-
-   if (!sd->auto_return_key) return;
-
-   if (efl_canvas_text_is_empty_get(obj) == EINA_TRUE)
-     return_key_disabled = EINA_TRUE;
-
-   efl_ui_text_input_panel_return_key_disabled_set(obj, return_key_disabled);
-}
-
 EOLIAN static Eina_Bool
 _efl_ui_text_elm_widget_on_focus(Eo *obj, Efl_Ui_Text_Data *sd, Elm_Object_Item *item EINA_UNUSED)
 {
@@ -1181,12 +1142,11 @@ _efl_ui_text_elm_widget_on_focus(Eo *obj, Efl_Ui_Text_Data *sd, Elm_Object_Item 
         if (sd->scroll)
           edje_object_signal_emit(sd->scr_edje, "elm,action,focus", "elm");
 
-        if (top && top_is_win && sd->input_panel_enable && !sd->input_panel_show_on_demand)
+        if (top && top_is_win)
           elm_win_keyboard_mode_set(top, ELM_WIN_KEYBOARD_ON);
         efl_event_callback_legacy_call(obj, ELM_WIDGET_EVENT_FOCUSED, NULL);
         if (_elm_config->atspi_mode)
           elm_interface_atspi_accessible_state_changed_signal_emit(obj, ELM_ATSPI_STATE_FOCUSED, EINA_TRUE);
-        _return_key_enabled_check(obj);
         _validate(obj);
      }
    else
@@ -1198,7 +1158,7 @@ _efl_ui_text_elm_widget_on_focus(Eo *obj, Efl_Ui_Text_Data *sd, Elm_Object_Item 
           edje_object_signal_emit(sd->scr_edje, "elm,action,unfocus", "elm");
         evas_object_focus_set(sw, EINA_FALSE);
 
-        if (top && top_is_win && sd->input_panel_enable)
+        if (top && top_is_win)
           elm_win_keyboard_mode_set(top, ELM_WIN_KEYBOARD_OFF);
         efl_event_callback_legacy_call(obj, ELM_WIDGET_EVENT_UNFOCUSED, NULL);
         if (_elm_config->atspi_mode)
@@ -2000,7 +1960,7 @@ _mouse_up_cb(void *data,
                   if (efl_isa(top, EFL_UI_WIN_CLASS))
                     top_is_win = EINA_TRUE;
 
-                  if (top_is_win && sd->input_panel_enable && sd->input_panel_show_on_demand)
+                  if (top_is_win)
                     elm_win_keyboard_mode_set(top, ELM_WIN_KEYBOARD_ON);
                }
           }
@@ -2113,7 +2073,6 @@ _entry_changed_handle(void *data,
      sd->delay_write = ecore_timer_add(EFL_UI_TEXT_DELAY_WRITE_TIME,
                                        _delay_write, data);
 
-   _return_key_enabled_check(data);
    text = efl_text_get(data);
    if (text)
      {
@@ -3382,8 +3341,6 @@ _efl_ui_text_efl_canvas_group_group_add(Eo *obj, Efl_Ui_Text_Data *priv)
 
    elm_layout_sizing_eval(obj);
 
-   efl_ui_text_input_panel_layout_set(obj, ELM_INPUT_PANEL_LAYOUT_NORMAL);
-   efl_ui_text_input_panel_enabled_set(obj, EINA_TRUE);
    efl_ui_text_prediction_allow_set(obj, EINA_TRUE);
    efl_ui_text_input_hint_set(obj, ELM_INPUT_HINT_AUTO_COMPLETE);
 
@@ -3503,7 +3460,6 @@ _efl_ui_text_efl_canvas_group_group_del(Eo *obj, Efl_Ui_Text_Data *sd)
         _filter_free(tf);
      }
    ELM_SAFE_FREE(sd->delay_write, ecore_timer_del);
-   free(sd->input_panel_imdata);
    eina_stringshare_del(sd->anchor_hover.hover_style);
 
    evas_event_thaw(evas_object_evas_get(obj));
@@ -4061,41 +4017,6 @@ _efl_ui_text_elm_interface_scrollable_bounce_allow_set(Eo *obj, Efl_Ui_Text_Data
 }
 
 EOLIAN static void
-_efl_ui_text_input_panel_layout_set(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd, Elm_Input_Panel_Layout layout)
-{
-   sd->input_panel_layout = layout;
-
-   edje_object_part_text_input_panel_layout_set
-     (sd->entry_edje, "elm.text", (Edje_Input_Panel_Layout)layout);
-
-   if (layout == ELM_INPUT_PANEL_LAYOUT_PASSWORD)
-     efl_ui_text_input_hint_set(obj, ((sd->input_hints & ~ELM_INPUT_HINT_AUTO_COMPLETE) | ELM_INPUT_HINT_SENSITIVE_DATA));
-   else if (layout == ELM_INPUT_PANEL_LAYOUT_TERMINAL)
-     efl_ui_text_input_hint_set(obj, (sd->input_hints & ~ELM_INPUT_HINT_AUTO_COMPLETE));
-}
-
-EOLIAN static Elm_Input_Panel_Layout
-_efl_ui_text_input_panel_layout_get(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd)
-{
-   return sd->input_panel_layout;
-}
-
-EOLIAN static void
-_efl_ui_text_input_panel_layout_variation_set(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd, int variation)
-{
-   sd->input_panel_layout_variation = variation;
-
-   edje_object_part_text_input_panel_layout_variation_set
-     (sd->entry_edje, "elm.text", variation);
-}
-
-EOLIAN static int
-_efl_ui_text_input_panel_layout_variation_get(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd)
-{
-   return sd->input_panel_layout_variation;
-}
-
-EOLIAN static void
 _efl_ui_text_autocapital_type_set(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd, Elm_Autocapital_Type autocapital_type)
 {
    sd->autocapital_type = autocapital_type;
@@ -4138,120 +4059,6 @@ _efl_ui_text_input_hint_get(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd)
    return sd->input_hints;
 }
 
-EOLIAN static void
-_efl_ui_text_input_panel_enabled_set(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd, Eina_Bool enabled)
-{
-   sd->input_panel_enable = enabled;
-   edje_object_part_text_input_panel_enabled_set
-     (sd->entry_edje, "elm.text", enabled);
-}
-
-EOLIAN static Eina_Bool
-_efl_ui_text_input_panel_enabled_get(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd)
-{
-   return sd->input_panel_enable;
-}
-
-EOLIAN static void
-_efl_ui_text_input_panel_show(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd)
-{
-   edje_object_part_text_input_panel_show(sd->entry_edje, "elm.text");
-}
-
-EOLIAN static void
-_efl_ui_text_input_panel_hide(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd)
-{
-
-   edje_object_part_text_input_panel_hide(sd->entry_edje, "elm.text");
-}
-
-EOLIAN static void
-_efl_ui_text_input_panel_language_set(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd, Elm_Input_Panel_Lang lang)
-{
-   sd->input_panel_lang = lang;
-   edje_object_part_text_input_panel_language_set
-     (sd->entry_edje, "elm.text", (Edje_Input_Panel_Lang)lang);
-}
-
-EOLIAN static Elm_Input_Panel_Lang
-_efl_ui_text_input_panel_language_get(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd)
-{
-   return sd->input_panel_lang;
-}
-
-EOLIAN static void
-_efl_ui_text_input_panel_imdata_set(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd, const void *data, int len)
-{
-   free(sd->input_panel_imdata);
-
-   sd->input_panel_imdata = calloc(1, len);
-   sd->input_panel_imdata_len = len;
-   memcpy(sd->input_panel_imdata, data, len);
-
-   edje_object_part_text_input_panel_imdata_set
-     (sd->entry_edje, "elm.text", sd->input_panel_imdata,
-     sd->input_panel_imdata_len);
-}
-
-EOLIAN static void
-_efl_ui_text_input_panel_imdata_get(const Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd, void *data, int *len)
-{
-   edje_object_part_text_input_panel_imdata_get
-     (sd->entry_edje, "elm.text", data, len);
-}
-
-EOLIAN static void
-_efl_ui_text_input_panel_return_key_type_set(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd, Elm_Input_Panel_Return_Key_Type return_key_type)
-{
-   sd->input_panel_return_key_type = return_key_type;
-
-   edje_object_part_text_input_panel_return_key_type_set
-     (sd->entry_edje, "elm.text", (Edje_Input_Panel_Return_Key_Type)return_key_type);
-}
-
-EOLIAN static Elm_Input_Panel_Return_Key_Type
-_efl_ui_text_input_panel_return_key_type_get(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd)
-{
-   return sd->input_panel_return_key_type;
-}
-
-EOLIAN static void
-_efl_ui_text_input_panel_return_key_disabled_set(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd, Eina_Bool disabled)
-{
-   sd->input_panel_return_key_disabled = disabled;
-
-   edje_object_part_text_input_panel_return_key_disabled_set
-     (sd->entry_edje, "elm.text", disabled);
-}
-
-EOLIAN static Eina_Bool
-_efl_ui_text_input_panel_return_key_disabled_get(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd)
-{
-   return sd->input_panel_return_key_disabled;
-}
-
-EOLIAN static void
-_efl_ui_text_input_panel_return_key_autoenabled_set(Eo *obj, Efl_Ui_Text_Data *sd, Eina_Bool enabled)
-{
-   sd->auto_return_key = enabled;
-   _return_key_enabled_check(obj);
-}
-
-EOLIAN static void
-_efl_ui_text_input_panel_show_on_demand_set(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd, Eina_Bool ondemand)
-{
-   sd->input_panel_show_on_demand = ondemand;
-
-   edje_object_part_text_input_panel_show_on_demand_set
-     (sd->entry_edje, "elm.text", ondemand);
-}
-
-EOLIAN static Eina_Bool
-_efl_ui_text_input_panel_show_on_demand_get(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd)
-{
-   return sd->input_panel_show_on_demand;
-}
-
 /* START - ANCHOR HOVER */
 static void
 _anchor_parent_del_cb(void *data,
@@ -4291,15 +4098,11 @@ _efl_ui_text_elm_widget_activate(Eo *obj, Efl_Ui_Text_Data *_pd EINA_UNUSED, Elm
 {
    if (act != ELM_ACTIVATE_DEFAULT) return EINA_FALSE;
 
-   EFL_UI_TEXT_DATA_GET(obj, sd);
-
    if (!elm_widget_disabled_get(obj) &&
        !evas_object_freeze_events_get(obj))
      {
         efl_event_callback_legacy_call
           (obj, EFL_UI_EVENT_CLICKED, NULL);
-        if (sd->editable && sd->input_panel_enable)
-          edje_object_part_text_input_panel_show(sd->entry_edje, "elm.text");
      }
    return EINA_TRUE;
 }
