@@ -122,7 +122,7 @@ my_efl_ui_text_bt_6(void *data, Evas_Object *obj EINA_UNUSED, void *event_info E
 {
    char style[128];
    Evas_Object *en = data;
-   size_t idx = (int) efl_key_data_get(en, "wrap_idx");
+   size_t idx = (size_t) efl_key_data_get(en, "wrap_idx");
    idx = (idx + 1) % 4;
    efl_key_data_set(en, "wrap_idx", (void *)idx);
 
@@ -143,7 +143,7 @@ my_efl_ui_text_bt_5(void *data, Evas_Object *obj EINA_UNUSED, void *event_info E
 void
 test_efl_ui_text(void *data EINA_UNUSED, Evas_Object *obj EINA_UNUSED, void *event_info EINA_UNUSED)
 {
-   Evas_Object *win, *bx, *bx2, *bx3, *bt, *en, *ck;
+   Evas_Object *win, *bx, *bx2, *bx3, *bt, *en;
    Efl_Canvas_Text_Cursor *main_cur, *cur;
 
    win = elm_win_util_standard_add("entry", "Entry");
