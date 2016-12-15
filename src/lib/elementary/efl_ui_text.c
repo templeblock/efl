@@ -3536,6 +3536,15 @@ _efl_ui_text_efl_canvas_group_group_del(Eo *obj, Efl_Ui_Text_Data *sd)
    evas_object_event_callback_del_full(sd->entry_edje, EVAS_CALLBACK_MOVE,
          _efl_ui_text_move_cb, obj);
 
+   // XXX: seems that when 'text_obj' (composite object) was being swallowed
+   // in the sd->entry_edje, it resetted its parent to be sd->entry_edje
+   // (previous parent was 'obj'), thus wouldn't get deleted when 'obj' gets
+   // deleted.
+   // In fact: upon deletion of sd->entry_edje, the parent of 'text_obj' becomes
+   // the canvas - this is some evilness of edje_util
+   // (ref: _eo_unparent_helper @ edje_util.c).
+   edje_object_part_unswallow(sd->entry_edje, text_obj);
+   efl_parent_set(text_obj, obj);
    efl_canvas_group_del(efl_super(obj, MY_CLASS));
 }
 
