@@ -1423,6 +1423,17 @@ efl_replace(Eo **storage, Eo *new_obj)
 
 #include "efl_future.h"
 
+#define EO_DEBUG2 1
+
+#ifdef EO_DEBUG2
+typedef Eina_Bool (*Eo_Debug_Class_Iterator_Cb)(void *data, Efl_Class *kl);
+EAPI Eina_Bool
+eo_debug_classes_iterate(Eo_Debug_Class_Iterator_Cb cb, void *data);
+
+typedef Eina_Bool (*Eo_Debug_Object_Iterator_Cb)(void *data, Eo *obj);
+EAPI Eina_Bool
+eo_debug_objects_iterate(Eo_Debug_Object_Iterator_Cb cb, void *data);
+#endif
 /**
  * @}
  */

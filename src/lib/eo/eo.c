@@ -35,6 +35,10 @@ static Eina_Bool _eo_trash_bypass = EINA_FALSE;
 #define EO_CLASS_IDS_FIRST 1
 #define EFL_OBJECT_OP_IDS_FIRST 1
 
+// TEMP!!!!!!!!!!
+#define EO_DEBUG2 1
+
+
 /* Used inside the class_get functions of classes, see #EFL_DEFINE_CLASS */
 EAPI Eina_Lock _efl_class_creation_lock;
 EAPI unsigned int _efl_object_init_generation = 1;
@@ -2917,3 +2921,51 @@ _eo_log_obj_shutdown(void)
    eina_inarray_flush(&_eo_log_objs_no_debug);
 }
 #endif
+
+// TEMP!!!!!!!!!!
+#define EO_DEBUG2 1
+
+#ifdef EO_DEBUG2
+EAPI Eina_Bool
+eo_debug_classes_iterate(Eo_Debug_Class_Iterator_Cb cb, void *data)
+{
+   unsigned int i;
+   if (!cb) return EINA_FALSE;
+   for (i = 0; i < _eo_classes_last_id; i++)
+     {
+        if (!cb(data, _eo_class_id_get(_eo_classes[i])))
+           return EINA_TRUE;
+     }
+   return EINA_TRUE;
+}
+
+EAPI Eina_Bool
+eo_debug_objects_iterate(Eo_Debug_Object_Iterator_Cb cb, void *data)
+{
+   if (!cb) return EINA_FALSE;
+   Eo_Id_Table_Data *tdata = _eo_table_data_table_get(_eo_table_data_get(), EFL_ID_DOMAIN_MAIN);
+   for (Table_Index mid_table_id = 0; mid_table_id < MAX_MID_TABLE_ID; mid_table_id++)
+     {
+        if (tdata->eo_ids_tables[mid_table_id])
+          {
+             for (Table_Index table_id = 0; table_id < MAX_TABLE_ID; table_id++)
+               {
+                  if (TABLE_FROM_IDS)
+                    {
+                       for (Table_Index entry_id = 0; entry_id < MAX_ENTRY_ID; entry_id++)
+                         {
+                            _Eo_Id_Entry *entry = &(TABLE_FROM_IDS->entries[entry_id]);
+                            if (entry->active)
+                              {
+                                 Eo *obj = _eo_header_id_get((Eo_Header *) entry->ptr);
+                                 if (!cb(data, obj)) return EINA_TRUE;
+                              }
+                         }
+                    }
+               }
+          }
+     }
+   return EINA_TRUE;
+}
+#endif
+
