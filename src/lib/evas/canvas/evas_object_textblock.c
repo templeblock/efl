@@ -5549,7 +5549,14 @@ _layout_par(Ctxt *c)
           }
         /* Check if we need to wrap, i.e the text is bigger than the width,
            or we already found a wrap point. */
-        if ((c->w >= 0) &&
+        Eina_Bool skip = EINA_FALSE;
+        if ((it->type == EVAS_TEXTBLOCK_ITEM_FORMAT) &&
+              (_IS_LINE_SEPARATOR(_ITEM_FORMAT(it)->item) ||
+               _IS_PARAGRAPH_SEPARATOR_SIMPLE(_ITEM_FORMAT(it)->item)))
+          {
+             skip = EINA_TRUE;
+          }
+        if (!skip && (c->w >= 0) &&
               (obs ||
                  (((c->x + it->w) >
                    (c->w - c->o->style_pad.l - c->o->style_pad.r -
