@@ -17,14 +17,22 @@
 # define e_debug_end(x...) do { } while (0)
 #endif
 
+typedef struct _Eina_Debug_Session Eina_Debug_Session;
+
 typedef struct _Eina_Debug_Thread Eina_Debug_Thread;
 
 struct _Eina_Debug_Thread
 {
    pthread_t thread;
+
+   Eina_Debug_Session *cmd_session;
+   void *cmd_buffer;
+   int cmd_result;
+
 #if defined(__clockid_t_defined)
    struct timespec clok;
 #endif
+   int thread_id;
    int val;
 };
 
@@ -55,7 +63,6 @@ void _eina_debug_dump_fhandle_bt(FILE *f, void **bt, int btlen);
       int btlen = backtrace((void **)bt, EINA_MAX_BT); \
       _eina_debug_dump_fhandle_bt(file, bt, btlen); \
    } while (0)
-
 
 Eina_Bool _eina_debug_cpu_init(void);
 Eina_Bool _eina_debug_cpu_shutdown(void);

@@ -39,6 +39,8 @@ static int                *_bt_cpu;
 /* Used by trace timer */
 static double _trace_t0 = 0.0;
 
+static int _prof_get_op = EINA_DEBUG_OPCODE_INVALID;
+
 void
 _eina_debug_dump_fhandle_bt(FILE *f, void **bt, int btlen)
 {
@@ -134,9 +136,6 @@ found:
    eina_semaphore_release(&_wait_for_bts_sem, 1);
 }
 
-// we shall sue SIGPROF as out signal for pausing threads and having them
-// dump a backtrace for polling based profiling
-#define SIG SIGPROF
 
 // a quick and dirty local time point getter func - not portable
 static inline double
@@ -154,15 +153,32 @@ get_time(void)
 }
 
 static void
-_eina_debug_collect_bt(pthread_t pth)
+_eina_debug_collect_bt(pthread_t pth EINA_UNUSED)
 {
    // this async signals the thread to switch to the deebug signal handler
    // and collect a backtrace and other info from inside the thread
-   pthread_kill(pth, SIG);
+   //pthread_kill(pth, SIG);
 }
 
 static Eina_Bool
-_trace_cb()
+_trace_cb(void *data)
+{
+   static Eina_Debug_Packet_Header *hdr = NULL;
+
+   if (!hdr)
+     {
+        hdr = calloc(1, sizeof(*hdr));
+        hdr->size = sizeof(Eina_Debug_Packet_Header);
+        hdr->thread_id = 0xFFFFFFFF;
+        hdr->opcode = _prof_get_op;
+     }
+
+   eina_debug_dispatch(data, (void *)hdr);
+   return EINA_TRUE;
+}
+
+static Eina_Debug_Error
+_prof_get_cb(Eina_Debug_Session *session EINA_UNUSED, int cid EINA_UNUSED, void *buffer EINA_UNUSED, int size EINA_UNUSED)
 {
    static int bts = 0;
    int i;
@@ -223,62 +239,40 @@ err:
         _trace_t0 = t;
         bts = 0;
      }
-   return EINA_TRUE;
+   return EINA_DEBUG_OK;
 }
 
 // profiling on with poll time gap as uint payload
-static Eina_Bool
-_prof_on_cb(Eina_Debug_Session *session EINA_UNUSED, int cid EINA_UNUSED, void *buffer, int size)
+static Eina_Debug_Error
+_prof_on_cb(Eina_Debug_Session *session, int cid EINA_UNUSED, void *buffer, int size)
 {
    unsigned int time;
    if (size >= 4)
      {
         memcpy(&time, buffer, 4);
         _trace_t0 = 0.0;
-        eina_debug_timer_add(time, _trace_cb);
+        eina_debug_timer_add(time, _trace_cb, session);
      }
-   return EINA_TRUE;
+   return EINA_DEBUG_OK;
 }
 
-static Eina_Bool
+static Eina_Debug_Error
 _prof_off_cb(Eina_Debug_Session *session EINA_UNUSED, int cid EINA_UNUSED, void *buffer EINA_UNUSED, int size EINA_UNUSED)
 {
-   eina_debug_timer_add(0, NULL);
-   return EINA_TRUE;
+   eina_debug_timer_add(0, NULL, NULL);
+   return EINA_DEBUG_OK;
 }
 
 static const Eina_Debug_Opcode _OPS[] = {
        {"profiler/on", NULL, &_prof_on_cb},
        {"profiler/off", NULL, &_prof_off_cb},
+       {"profiler/bt_get", &_prof_get_op, &_prof_get_cb},
        {NULL, NULL, NULL}
 };
-
-static void
-_signal_init(void)
-{
-   struct sigaction sa;
-
-   // set up signal handler for our profiling signal - eevery thread should
-   // obey this (this is the case on linux - other OSs may vary)
-   sa.sa_sigaction = _eina_debug_signal;
-   sa.sa_flags = SA_RESTART | SA_SIGINFO;
-   sigemptyset(&sa.sa_mask);
-   if (sigaction(SIG, &sa, NULL) != 0)
-     e_debug("EINA DEBUG ERROR: Can't set up sig %i handler!", SIG);
-
-   sa.sa_sigaction = NULL;
-   sa.sa_handler = SIG_IGN;
-   sigemptyset(&sa.sa_mask);
-   sa.sa_flags = 0;
-   if (sigaction(SIGPIPE, &sa, 0) == -1) perror(0);
-}
 
 Eina_Bool
 _eina_debug_bt_init(void)
 {
-   // set up our profile signal handler
-   _signal_init();
-
    eina_semaphore_new(&_wait_for_bts_sem, 0);
    eina_debug_opcodes_register(NULL, _OPS, NULL);
    return EINA_TRUE;

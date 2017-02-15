@@ -2944,7 +2944,7 @@ eo_debug_objects_iterate(Eo_Debug_Object_Iterator_Cb cb, void *data)
 {
    if (!cb) return EINA_FALSE;
    Eo_Id_Table_Data *tdata = _eo_table_data_table_get(_eo_table_data_get(), EFL_ID_DOMAIN_MAIN);
-   for (Table_Index mid_table_id = 0; mid_table_id < MAX_MID_TABLE_ID; mid_table_id++)
+   for (Table_Index mid_table_id = 0; tdata && mid_table_id < MAX_MID_TABLE_ID; mid_table_id++)
      {
         if (tdata->eo_ids_tables[mid_table_id])
           {
