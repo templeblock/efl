@@ -484,6 +484,7 @@ eina_debug_local_connect(Eina_Bool is_master)
 
    Eina_Debug_Session *session = calloc(1, sizeof(*session));
    session->dispatch_cb = eina_debug_dispatch;
+   session->fd_out = session->fd_in = -1;
    // try this socket file - it will likely be:
    //   ~/.ecore/efl_debug/0
    // or maybe
@@ -690,7 +691,7 @@ eina_debug_opcodes_register(Eina_Debug_Session *session, const Eina_Debug_Opcode
          session->opcode_reply_infos, info);
 
    //send only if _session's fd connected, if not -  it will be sent when connected
-   if(session && session->fd_in)
+   if(session && session->fd_in != -1)
       _opcodes_registration_send(session, info);
 }
 
