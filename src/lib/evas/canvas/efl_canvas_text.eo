@@ -372,6 +372,8 @@ class Efl.Canvas.Text (Efl.Canvas.Object, Efl.Text, Efl.Canvas.Filter.Internal)
       Efl.Canvas.Filter.Internal.filter_dirty;
       Efl.Canvas.Filter.Internal.filter_input_render;
       Efl.Canvas.Filter.Internal.filter_state_prepare;
+      Efl.Text.wrap { get; set; }
+      Efl.Text.multiline { get; set; }
    }
    events {
       changed; [[Called when the content (text or annotations) changed.]]

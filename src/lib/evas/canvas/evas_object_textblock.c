@@ -104,6 +104,14 @@ static const char o_type[] = "textblock";
     ((ch) == _TAB) || \
     ((ch) == _PARAGRAPH_SEPARATOR))
 
+#define _IS_WRAP_NONE(fmt) ((c->o->wrap == EFL_TEXT_WRAP_NONE) && \
+        !fmt->wrap_word && !fmt->wrap_char && !fmt->wrap_mixed && \
+        !fmt->wrap_hyphenation)
+#define _IS_WRAP_WORD(fmt) ((c->o->wrap == EFL_TEXT_WRAP_WORD) || fmt->wrap_word)
+#define _IS_WRAP_CHAR(fmt) ((c->o->wrap == EFL_TEXT_WRAP_CHAR) || fmt->wrap_char)
+#define _IS_WRAP_MIXED(fmt) ((c->o->wrap == EFL_TEXT_WRAP_MIXED) || fmt->wrap_mixed)
+#define _IS_WRAP_HYPHENATION(fmt) ((c->o->wrap == EFL_TEXT_WRAP_HYPHENATION) || fmt->wrap_hyphenation)
+
 #ifdef CRI
 #undef CRI
 #endif
@@ -625,6 +633,9 @@ struct _Evas_Object_Textblock
    Eina_Bool                           legacy_newline : 1;
    Eina_Bool                           inherit_paragraph_direction : 1;
    Eina_Bool                           changed_paragraph_direction : 1;
+   Efl_Text_Wrap                       wrap;
+   Eina_Bool                           multiline : 1;
+   Eina_Bool                           wrap_changed : 1;
 };
 
 struct _Evas_Textblock_Selection_Iterator
@@ -5402,7 +5413,8 @@ _layout_par(Ctxt *c)
          * and we aren't just calculating. */
         if (!c->par->text_node->is_new && !c->par->text_node->dirty &&
               !c->width_changed && c->par->lines &&
-              !c->o->have_ellipsis && !c->o->obstacle_changed)
+              !c->o->have_ellipsis && !c->o->obstacle_changed &&
+              !c->o->wrap_changed)
           {
              Evas_Object_Textblock_Line *ln;
              /* Update c->line_no */
@@ -5593,10 +5605,9 @@ _layout_par(Ctxt *c)
                }
 
              if ((EINA_DBL_EQ(it->format->ellipsis, 1.0)) && (c->h >= 0) &&
-                 ((c->y + ellip_h_thresh >
-                   c->h - c->o->style_pad.t - c->o->style_pad.b) ||
-                     (!it->format->wrap_word && !it->format->wrap_char &&
-                         !it->format->wrap_mixed && !it->format->wrap_hyphenation)))
+                   ((c->y + ellip_h_thresh >
+                     c->h - c->o->style_pad.t - c->o->style_pad.b) ||
+                    _IS_WRAP_NONE(it->format) || !c->o->multiline))
                {
                   _layout_handle_ellipsis(c, it, i);
                   ret = 1;
@@ -5604,8 +5615,9 @@ _layout_par(Ctxt *c)
                }
              /* If we want to wrap and it's worth checking for wrapping
               * (i.e there's actually text). */
-             else if (((wrap > 0) || it->format->wrap_word || it->format->wrap_char ||
-                it->format->wrap_mixed || it->format->wrap_hyphenation) && it->text_node)
+             else if (c->o->multiline &&
+                   (wrap > 0 || !_IS_WRAP_NONE(it->format)) &&
+                   it->text_node)
                {
                   size_t line_start;
                   size_t it_len;
@@ -5619,8 +5631,9 @@ _layout_par(Ctxt *c)
                   if (!line_breaks)
                     {
                        /* Only relevant in those cases */
-                       if (it->format->wrap_word || it->format->wrap_mixed ||
-                           it->format->wrap_hyphenation)
+                       if (  _IS_WRAP_WORD(it->format) ||
+                             _IS_WRAP_MIXED(it->format) ||
+                             _IS_WRAP_HYPHENATION(it->format))
                          {
                             const char *lang;
                             lang = (it->format->font.fdesc) ?
@@ -5636,7 +5649,7 @@ _layout_par(Ctxt *c)
                          }
                     }
 
-                  if (!word_breaks && it->format->wrap_hyphenation)
+                  if (!word_breaks && _IS_WRAP_HYPHENATION(it->format))
                     {
                        const char *lang;
                        lang = (it->format->font.fdesc) ?
@@ -5680,16 +5693,16 @@ _layout_par(Ctxt *c)
                          {
                             c->w = obs->x;
                          }
-                       if (it->format->wrap_word)
+                       if (_IS_WRAP_WORD(it->format))
                           wrap = _layout_get_wordwrap(c, it->format, it,
                                 line_start, line_breaks, allow_scan_fwd);
-                       else if (it->format->wrap_char)
+                       else if (_IS_WRAP_CHAR(it->format))
                           wrap = _layout_get_charwrap(c, it->format, it,
                                 line_start, line_breaks);
-                       else if (it->format->wrap_mixed)
+                       else if (_IS_WRAP_MIXED(it->format))
                           wrap = _layout_get_mixedwrap(c, it->format, it,
                                 line_start, line_breaks, allow_scan_fwd);
-                       else if (it->format->wrap_hyphenation)
+                       else if (_IS_WRAP_HYPHENATION(it->format))
                           wrap = _layout_get_hyphenationwrap(c, it->format, it,
                                 line_start, line_breaks, word_breaks);
                        else
@@ -5826,7 +5839,8 @@ _layout_par(Ctxt *c)
                   /* If it's a newline, and we are not in newline compat
                    * mode, or we are in newline compat mode, and this is
                    * not used as a paragraph separator, advance */
-                  if (fi->item && _IS_LINE_SEPARATOR(fi->item) &&
+                  if (c->o->multiline &&
+                        fi->item && _IS_LINE_SEPARATOR(fi->item) &&
                         (!c->o->legacy_newline ||
                          eina_list_next(i)))
                     {
@@ -6456,6 +6470,7 @@ _relayout(const Evas_Object *eo_obj)
    o->formatted.valid = 1;
    o->formatted.oneline_h = 0;
    o->last_w = obj->cur->geometry.w;
+   o->wrap_changed = EINA_FALSE;
    LYDBG("ZZ: --------- layout %p @ %ix%i = %ix%i\n", eo_obj, obj->cur->geometry.w, obj->cur->geometry.h, o->formatted.w, o->formatted.h);
    o->last_h = obj->cur->geometry.h;
    if ((o->paragraphs) && (!EINA_INLIST_GET(o->paragraphs)->next) &&
@@ -6586,7 +6601,8 @@ evas_object_textblock_add(Evas *e)
    MAGIC_CHECK(e, Evas, MAGIC_EVAS);
    return NULL;
    MAGIC_CHECK_END();
-   Evas_Object *eo_obj = efl_add(MY_CLASS, e);
+   Evas_Object *eo_obj = efl_add(MY_CLASS, e,
+         efl_text_multiline_set(efl_added, EINA_TRUE));
    return eo_obj;
 }
 
@@ -12919,6 +12935,8 @@ evas_object_textblock_init(Evas_Object *eo_obj)
    evas_object_textblock_text_markup_set(eo_obj, "");
 
    o->legacy_newline = EINA_TRUE;
+   o->wrap = EFL_TEXT_WRAP_NONE;
+   o->multiline = EINA_FALSE;
 #ifdef BIDI_SUPPORT
    o->inherit_paragraph_direction = EINA_TRUE;
 #endif
@@ -14424,6 +14442,7 @@ _efl_canvas_text_cursor_text_append(Efl_Canvas_Text_Cursor_Data *cur,
           off += n;
      }
    len += _prepend_text_run2(cur, text, off);
+   efl_event_callback_call(cur->obj, EFL_CANVAS_TEXT_EVENT_CHANGED, NULL);
    return len;
 }
 
@@ -14853,6 +14872,38 @@ _efl_canvas_text_annotation_positions_get(Eo *eo_obj,
    _textblock_cursor_pos_at_fnode_set(eo_obj, end, annotation->end_node);
 }
 
+EOLIAN static void
+_efl_canvas_text_efl_text_wrap_set(Eo *eo_obj EINA_UNUSED, Efl_Canvas_Text_Data *o EINA_UNUSED,
+      Efl_Text_Wrap wrap)
+{
+   if (o->wrap == wrap) return;
+   o->wrap = wrap;
+   _evas_textblock_changed(o, eo_obj);
+   o->wrap_changed = EINA_TRUE;
+   efl_event_callback_call(eo_obj, EFL_CANVAS_TEXT_EVENT_CHANGED, NULL);
+}
+
+EOLIAN static Efl_Text_Wrap
+_efl_canvas_text_efl_text_wrap_get(Eo *eo_obj EINA_UNUSED, Efl_Canvas_Text_Data *o EINA_UNUSED)
+{
+   return o->wrap;
+}
+
+
+EOLIAN static void
+_efl_canvas_text_efl_text_multiline_set(Eo *eo_obj EINA_UNUSED, Efl_Canvas_Text_Data *o EINA_UNUSED,
+      Eina_Bool enabled)
+{
+   if (o->multiline == enabled) return;
+   o->multiline = enabled;
+   efl_event_callback_call(eo_obj, EFL_CANVAS_TEXT_EVENT_CHANGED, NULL);
+}
+
+EOLIAN static Eina_Bool
+_efl_canvas_text_efl_text_multiline_get(Eo *eo_obj EINA_UNUSED, Efl_Canvas_Text_Data *o EINA_UNUSED)
+{
+   return o->multiline;
+}
 /**
  * @}
  */

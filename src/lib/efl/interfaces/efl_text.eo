@@ -1,3 +1,12 @@
+enum Efl.Text.Wrap
+{
+   [[Wrap mode of the text, if multiline]]
+   none,
+   char,
+   word,
+   mixed,
+   hyphenation
+}
 interface Efl.Text
 {
    [[Efl text interface]]
@@ -20,6 +29,27 @@ interface Efl.Text
          }
          values {
             text: string; [[Text string to display on it.]]
+         }
+      }
+      @property wrap {
+         [[Wrap mode for use in the text.
+           
+           Note that some wrap modes aren't respected, depending on the
+           @.multiline property.
+         ]]
+         values {
+            wrap: Efl.Text.Wrap;
+         }
+      }
+      @property multiline {
+         [[Whether multiline is enabled or not.
+
+           Text that doesn't have mulitline enabled will ignore special
+           characters and text wrapping that will result in more than a single
+           line.
+         ]]
+         values {
+            enabled: bool;
          }
       }
    }
