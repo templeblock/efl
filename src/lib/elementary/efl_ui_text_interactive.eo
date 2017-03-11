@@ -37,14 +37,6 @@ interface Efl.Ui.Text.Interactive ()
             end: Efl.Canvas.Text.Cursor; [[The end of the selection]]
          }
       }
-      @property multiline {
-         [[Whether or not this textblock is allowed to be multiline]]
-         set {}
-         get {}
-         values {
-            enabled: bool; [[$true if enabled, $false otherwise]]
-         }
-      }
       @property editable {
          [[Whether the entry is editable.
 

@@ -651,6 +651,10 @@ _efl_ui_text_theme_group_get(Evas_Object *obj)
 {
    EFL_UI_TEXT_DATA_GET(obj, sd);
 
+   Eina_Bool single_line;
+
+   single_line = !efl_text_multiline_get(obj);
+
    if (sd->editable)
      {
         if (sd->password) return "base-password";
@@ -2105,6 +2109,9 @@ _entry_changed_handle(void *data,
 {
    Evas_Coord minh;
    const char *text;
+   Eina_Bool single_line;
+
+   single_line = !efl_text_multiline_get(data);
 
    EFL_UI_TEXT_DATA_GET(data, sd);
 
@@ -2115,6 +2122,12 @@ _entry_changed_handle(void *data,
     * re-eval in a moment. */
    evas_object_size_hint_min_get(data, NULL, &minh);
    evas_object_size_hint_min_set(data, -1, minh);
+
+   if (sd->single_line != single_line)
+     {
+        sd->single_line = single_line;
+        elm_obj_widget_theme_apply(data);
+     }
 
    elm_layout_sizing_eval(data);
    ELM_SAFE_FREE(sd->text, eina_stringshare_del);
