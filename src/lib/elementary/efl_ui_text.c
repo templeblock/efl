@@ -56,7 +56,7 @@ struct _Efl_Ui_Text_Data
    const char                           *text;
    const char                           *file;
    Elm_Text_Format                       format;
-   Evas_Coord                            last_w, ent_mw, ent_mh;
+   Evas_Coord                            ent_w, ent_h;
    Evas_Coord                            downx, downy;
    Evas_Coord                            ox, oy;
    Eina_List                            *anchors;
@@ -1074,91 +1074,60 @@ EOLIAN static void
 _efl_ui_text_elm_layout_sizing_eval(Eo *obj, Efl_Ui_Text_Data *sd)
 {
    Evas_Coord minw, minh, resw, resh;
+   Evas_Coord fw, fh;
+   Eo *sw;
+   Eina_Bool wrap;
 
    evas_object_geometry_get(obj, NULL, NULL, &resw, &resh);
 
-   if (!sd->changed && (sd->last_w == resw))
-     {
-        if (sd->scroll)
-          {
-             if (sd->text_obj)
-             {
-                 Evas_Coord vw = 0, vh = 0, h = 0;
+   sw = edje_object_part_swallow_get(sd->entry_edje, "elm.text");
+   if (!sw) return;
 
-                 // Called for line wrapping + scrolling; use the viewport
-                 // width and the formatted height as proper constraints.
-                 elm_interface_scrollable_content_viewport_geometry_get
-                     (obj, NULL, NULL, &vw, &vh);
+   wrap = efl_text_wrap_get(sw);
 
-                 efl_canvas_text_size_formatted_get(sd->text_obj, NULL, &h);
-                 if (vh > h) h = vh;
+   if (!sd->changed && (resw == sd->ent_w) && (resh == sd->ent_h)) return;
 
-                 evas_object_resize(sd->entry_edje, vw, h);
-             }
-          }
-        return;
-     }
+   sd->changed = EINA_FALSE;
+   sd->ent_w = resw;
+   sd->ent_h = resh;
+
 
    evas_event_freeze(evas_object_evas_get(obj));
-   sd->changed = EINA_FALSE;
-   sd->last_w = resw;
    if (sd->scroll)
      {
-        Evas_Coord vw = 0, vh = 0, vmw = 0, vmh = 0, w = -1, h = -1;
+        Evas_Coord vw, vh;
+        Evas_Coord tw, th;
+        elm_interface_scrollable_content_viewport_geometry_get(obj, NULL, NULL, &vw, &vh);
+        efl_gfx_size_set(sd->entry_edje, vw, vh);
+        efl_gfx_size_get(sw, &tw, &th);
+        efl_canvas_text_size_formatted_get(sw, &fw, &fh);
+        evas_object_size_hint_min_set(sw, fw, fh);
+        edje_object_size_min_calc(sd->entry_edje, &minw, &minh);
+        evas_object_size_hint_min_set(sw, -1, -1);
 
-        // XXX: no need for the following line. It's been commented out.
-        // sd->scr_edje is the resize_object of this widget. It's already
-        // resized when gfx_size_set was called on this widget.
-        //evas_object_resize(sd->scr_edje, resw, resh);
+        if (vw > minw) minw = vw;
+        efl_gfx_size_set(sd->entry_edje, minw, minh);
 
-        edje_object_size_min_calc(sd->scr_edje, &vmw, &vmh);
-        elm_interface_scrollable_content_viewport_geometry_get
-           (obj, NULL, NULL, &vw, &vh);
-        edje_object_size_min_restricted_calc
-           (sd->entry_edje, &minw, &minh, vw, 0);
-        elm_coords_finger_size_adjust(1, &minw, 1, &minh);
-
-        /* This is a hack to workaround the way min size hints
-         * are treated.  If the minimum width is smaller than the
-         * restricted width, it means the minimum doesn't
-         * matter. */
-        if (minw <= vw)
+        if (!efl_text_multiline_get(sw))
           {
-             Evas_Coord ominw = -1;
-
-             efl_gfx_size_hint_combined_min_get(sd->entry_edje, &ominw, NULL);
-             minw = ominw;
+             evas_object_size_hint_min_set(obj, -1, minh);
           }
-        sd->ent_mw = minw;
-        sd->ent_mh = minh;
-
-        if ((minw > 0) && (vw < minw)) vw = minw;
-        if (minh > vh) vh = minh;
-
-        if (sd->single_line) h = vmh + minh;
-        else h = vmh;
-
-        evas_object_resize(sd->entry_edje, vw, vh);
-        evas_object_size_hint_min_set(obj, w, h);
-
-        if (sd->single_line)
-           evas_object_size_hint_max_set(obj, -1, h);
-        else
-           evas_object_size_hint_max_set(obj, -1, -1);
      }
    else
      {
-        Evas_Coord ominw, ominh;
-        Eo *sw = edje_object_part_swallow_get(sd->entry_edje, "elm.text");
-        efl_canvas_text_size_native_get(sw, &resw, &resh);
-        evas_object_size_hint_min_set(sw, resw, resh);
-        edje_object_size_min_calc(sd->entry_edje, &ominw, &ominh);
-        evas_object_size_hint_min_set(obj, ominw, ominh);
+        efl_canvas_text_size_formatted_get(sw, &fw, &fh);
+        evas_object_size_hint_min_set(sw, fw, fh);
+        edje_object_size_min_calc(sd->entry_edje, &minw, &minh);
+        evas_object_size_hint_min_set(sw, -1, -1);
+        if (wrap == EFL_TEXT_WRAP_NONE)
+          {
+             evas_object_size_hint_min_set(obj, minw, minh);
+          }
      }
-
-   _cursor_geometry_recalc(obj);
    evas_event_thaw(evas_object_evas_get(obj));
    evas_event_thaw_eval(evas_object_evas_get(obj));
+
+   _cursor_geometry_recalc(obj);
 }
 
 static void
@@ -3300,7 +3269,7 @@ _efl_ui_text_efl_canvas_group_group_add(Eo *obj, Efl_Ui_Text_Data *priv)
       (priv->entry_edje, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
    evas_object_size_hint_align_set
       (priv->entry_edje, EVAS_HINT_FILL, EVAS_HINT_FILL);
-   efl_canvas_text_style_set(text_obj, NULL, "DEFAULT='font=Sans font_size=14 color=#fff wrap=word'");
+   efl_canvas_text_style_set(text_obj, NULL, "DEFAULT='font=Sans font_size=14 color=#fff'");
    efl_event_callback_add(text_obj, EFL_UI_TEXT_INTERACTIVE_EVENT_CHANGED_USER,
          _efl_ui_text_changed_cb, obj);
    efl_event_callback_add(text_obj, EFL_CANVAS_TEXT_EVENT_CHANGED,
@@ -4013,6 +3982,7 @@ _efl_ui_text_scrollable_set(Eo *obj, Efl_Ui_Text_Data *sd, Eina_Bool scroll)
         /* we now must re-theme ourselves to a scroller decoration
          * and move the entry looking object to be the content of the
          * scrollable view */
+        evas_object_size_hint_min_set(obj, -1, -1);
         elm_widget_resize_object_set(obj, NULL, EINA_TRUE);
         elm_widget_sub_object_add(obj, sd->entry_edje);
 
@@ -4063,7 +4033,6 @@ _efl_ui_text_scrollable_set(Eo *obj, Efl_Ui_Text_Data *sd, Eina_Bool scroll)
 
         elm_widget_on_show_region_hook_set(obj, NULL, NULL);
      }
-   sd->last_w = -1;
    _update_decorations(obj);
    elm_obj_widget_theme_apply(obj);
 }
