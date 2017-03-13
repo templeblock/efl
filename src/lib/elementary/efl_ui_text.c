@@ -3005,8 +3005,6 @@ _efl_ui_text_resize_internal(Evas_Object *obj)
 
         elm_interface_scrollable_content_viewport_geometry_get
               (obj, NULL, NULL, &vw, &vh);
-        if (vw < sd->ent_mw) vw = sd->ent_mw;
-        if (vh < sd->ent_mh) vh = sd->ent_mh;
         evas_object_resize(sd->entry_edje, vw, vh);
      }
 
