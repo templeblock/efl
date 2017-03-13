@@ -260,3 +260,36 @@ test_efl_ui_text(void *data EINA_UNUSED, Evas_Object *obj EINA_UNUSED, void *eve
    evas_object_resize(win, 480, 320);
    evas_object_show(win);
 }
+
+void
+test_efl_ui_text_box(void *data EINA_UNUSED, Evas_Object *obj EINA_UNUSED, void *event_info EINA_UNUSED)
+{
+   Evas_Object *win, *bx;
+   Eo *en;
+
+   win = elm_win_util_standard_add("label", "Label");
+   elm_win_autodel_set(win, EINA_TRUE);
+
+   bx = elm_box_add(win);
+   evas_object_size_hint_weight_set(bx, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+   evas_object_size_hint_align_set(bx, EVAS_HINT_FILL, EVAS_HINT_FILL);
+   elm_win_resize_object_add(win, bx);
+
+   en = _create_label(win, bx);
+   efl_text_set(en, "This is a small label");
+   //                012345678901234567890
+   _apply_style(en, 0, 21, "font_size=12 font_weight=bold");
+
+   en = efl_add(EFL_UI_TEXT_CLASS, win,
+         efl_text_set(efl_added, "Helloasdsadjhajhsdghj"),
+         efl_ui_text_interactive_editable_set(efl_added, EINA_TRUE));
+   efl_ui_text_scrollable_set(en, EINA_TRUE);
+   evas_object_size_hint_weight_set(en, EVAS_HINT_EXPAND, 0);
+   evas_object_size_hint_align_set(en, EVAS_HINT_FILL, 0.5);
+   elm_box_pack_end(bx, en);
+   evas_object_show(en);
+
+   evas_object_show(bx);
+   evas_object_resize(win, 480, 320);
+   evas_object_show(win);
+}
