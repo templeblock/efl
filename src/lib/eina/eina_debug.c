@@ -98,7 +98,7 @@ typedef struct
 
 struct _Eina_Debug_Session
 {
-   Eina_Debug_Cb *cbs; /* Table of callbacks indexed by opcode id */
+   Eina_List **cbs; /* Table of callbacks lists indexed by opcode id */
    Eina_List *opcode_reply_infos;
    Eina_Debug_Dispatch_Cb dispatch_cb; /* Session dispatcher */
    int cbs_length; /* cbs table size */
@@ -340,10 +340,13 @@ _static_opcode_register(Eina_Debug_Session *session,
      {
         int i = session->cbs_length;
         session->cbs_length = op_id + 16;
-        session->cbs = realloc(session->cbs, session->cbs_length * sizeof(Eina_Debug_Cb));
+        session->cbs = realloc(session->cbs, session->cbs_length * sizeof(Eina_List *));
         for(; i < session->cbs_length; i++) session->cbs[i] = NULL;
      }
-   session->cbs[op_id] = cb;
+   if (cb)
+     {
+        session->cbs[op_id] = eina_list_append(session->cbs[op_id], cb);
+     }
 }
 
 /*
@@ -433,10 +436,13 @@ static void
 _opcodes_unregister_all(Eina_Debug_Session *session)
 {
    Eina_List *l;
+   int i;
    _opcode_reply_info *info = NULL;
 
    if (!session) return;
    session->cbs_length = 0;
+   for (i = 0; i < session->cbs_length; i++)
+      eina_list_free(session->cbs[i]);
    free(session->cbs);
    session->cbs = NULL;
 
@@ -696,19 +702,25 @@ static Eina_Debug_Error
 _self_dispatch(Eina_Debug_Session *session, void *buffer)
 {
    Eina_Debug_Packet_Header *hdr =  buffer;
+   Eina_List *itr;
    int opcode = hdr->opcode;
    Eina_Debug_Cb cb = NULL;
 
-   if(opcode < session->cbs_length) cb = session->cbs[opcode];
-
-   if (cb)
+   if (opcode >= session->cbs_length)
      {
-        return cb(session, hdr->cid,
+        e_debug("Invalid opcode %d", opcode);
+        return EINA_DEBUG_ERROR;
+     }
+
+   EINA_LIST_FOREACH(session->cbs[opcode], itr, cb)
+     {
+        if (!cb) continue;
+        Eina_Debug_Error ret = cb(session, hdr->cid,
               (unsigned char *)buffer + sizeof(*hdr),
               hdr->size - sizeof(*hdr));
+        if (ret == EINA_DEBUG_ERROR) return ret;
      }
-   else e_debug("Invalid opcode %d", opcode);
-   return EINA_DEBUG_ERROR;
+   return EINA_DEBUG_OK;
 }
 
 EAPI Eina_Debug_Error
