@@ -3116,6 +3116,11 @@ Eo *_edje_swallow_internal_proxy_get(Edje_Object *obj, Edje *ed, Edje_Real_Part 
 Efl_Gfx *_edje_efl_container_content_get(Edje *ed, const char *part);
 Eina_Bool _edje_efl_container_content_set(Edje *ed, const char *part, Efl_Gfx *obj_swallow);
 
+/* part text: TEXT */
+Eo *_edje_text_internal_proxy_get(Edje_Object *obj, Edje *ed, Edje_Real_Part *rp);
+Eina_Bool   _edje_efl_text_set(Eo *obj, Edje *ed, const char *part, const char *text);
+const char *_edje_efl_text_get(Eo *obj, Edje *ed, const char *part);
+
 void _edje_internal_proxy_shutdown(void);
 
 // Svg loader

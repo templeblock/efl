@@ -1,0 +1,14 @@
+class Efl.Canvas.Layout_Internal.Text (Efl.Object, Efl.Canvas.Layout_Internal, Efl.Text)
+{
+   [[Represents a TEXT part of an Edje object.
+
+     Its lifetime is limited to one function call only, unless an extra
+     reference is explicitely held.
+   ]]
+   data: Edje_Text_Data;
+   implements {
+      Efl.Object.finalize;
+      Efl.Canvas.Layout_Internal.real_part { set; }
+      Efl.Text.text { set; get; }
+   }
+}
