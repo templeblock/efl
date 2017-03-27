@@ -931,7 +931,7 @@ _efl_ui_text_elm_widget_theme_apply(Eo *obj, Efl_Ui_Text_Data *sd)
 
    _mirrored_set(obj, elm_widget_mirrored_get(obj));
 
-   t = eina_stringshare_add(elm_object_text_get(obj));
+   t = eina_stringshare_add(efl_text_get(obj));
 
    elm_widget_theme_object_set
      (obj, sd->entry_edje, "efl_ui_text", _efl_ui_text_theme_group_get(obj), style);
@@ -2820,117 +2820,6 @@ _entry_text_append(Evas_Object* obj, const char* entry, Eina_Bool set)
      }
 }
 
-EOLIAN static Eina_Bool
-_efl_ui_text_elm_layout_text_set(Eo *obj, Efl_Ui_Text_Data *sd, const char *part, const char *entry)
-{
-   int len = 0;
-
-   if (!entry) entry = "";
-   if (part)
-     {
-        if (!strcmp(part, "guide"))
-          edje_object_part_text_set(sd->entry_edje, "elm.guide", entry);
-        else
-          edje_object_part_text_set(sd->entry_edje, part, entry);
-
-        return EINA_TRUE;
-     }
-
-   evas_event_freeze(evas_object_evas_get(obj));
-   ELM_SAFE_FREE(sd->text, eina_stringshare_del);
-   sd->changed = EINA_TRUE;
-
-   /* Clear currently pending job if there is one */
-   if (sd->append_text_idler)
-     {
-        ecore_idler_del(sd->append_text_idler);
-        ELM_SAFE_FREE(sd->append_text_left, free);
-        sd->append_text_idler = NULL;
-     }
-
-   len = strlen(entry);
-   if (sd->append_text_left)
-     {
-        free(sd->append_text_left);
-        sd->append_text_left = NULL;
-     }
-
-   /* Need to clear the entry first */
-   edje_object_part_text_set(sd->entry_edje, "elm.text", "");
-   _entry_text_append(obj, entry, EINA_TRUE);
-
-   if (len > 0)
-     _efl_ui_text_guide_update(obj, EINA_TRUE);
-   else
-     _efl_ui_text_guide_update(obj, EINA_FALSE);
-
-   evas_event_thaw(evas_object_evas_get(obj));
-   evas_event_thaw_eval(evas_object_evas_get(obj));
-   return EINA_TRUE;
-}
-
-EOLIAN static const char *
-_efl_ui_text_elm_layout_text_get(Eo *obj, Efl_Ui_Text_Data *sd, const char *item)
-{
-   const char *text;
-   Eo *text_obj = edje_object_part_swallow_get(sd->entry_edje, "elm.text");
-   sd->text_obj = text_obj;
-
-   if (item)
-     {
-        if (!strcmp(item, "default")) goto proceed;
-        else if (!strcmp(item, "guide"))
-          {
-             return edje_object_part_text_get(sd->entry_edje, "elm.guide");
-          }
-        else
-          {
-             return edje_object_part_text_get(sd->entry_edje, item);
-          }
-     }
-
-proceed:
-
-   text = efl_text_get(text_obj);
-   if (!text)
-     {
-        ERR("text=NULL for edje %p, part 'elm.text'", sd->entry_edje);
-
-        return NULL;
-     }
-
-   if (sd->append_text_len > 0)
-     {
-        char *tmpbuf;
-        size_t len, tlen;
-
-        tlen = strlen(text);
-        len = tlen + sd->append_text_len - sd->append_text_position;
-        /* FIXME: need that or we do copy uninitialised data */
-        tmpbuf = calloc(1, len + 1);
-        if (!tmpbuf)
-          {
-             ERR("Failed to allocate memory for entry's text %p", obj);
-             return NULL;
-          }
-        memcpy(tmpbuf, text, tlen);
-
-        if (sd->append_text_left)
-          memcpy(tmpbuf + tlen, sd->append_text_left
-                 + sd->append_text_position, sd->append_text_len
-                 - sd->append_text_position);
-        tmpbuf[len] = '\0';
-        eina_stringshare_replace(&sd->text, tmpbuf);
-        free(tmpbuf);
-     }
-   else
-     {
-        eina_stringshare_replace(&sd->text, text);
-     }
-
-   return sd->text;
-}
-
 static char *
 _access_info_cb(void *data EINA_UNUSED, Evas_Object *obj)
 {
@@ -3364,7 +3253,7 @@ _efl_ui_text_efl_canvas_group_group_add(Eo *obj, Efl_Ui_Text_Data *priv)
      (priv->entry_edje, "entry,redo,request", "elm.text",
      _entry_redo_request_signal_cb, obj);
 
-   elm_layout_text_set(obj, "elm.text", "");
+   //elm_layout_text_set(obj, "elm.text", "");
 
    elm_object_sub_cursor_set
      (wd->resize_obj, obj, ELM_CURSOR_XTERM);
