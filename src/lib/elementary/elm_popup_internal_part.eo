@@ -5,5 +5,6 @@ class Elm.Popup.Internal.Part (Elm.Layout.Internal.Part)
    implements {
       Efl.Container.content { get; set; }
       Efl.Container.content_unset;
+      Efl.Text.text { get; set; }
    }
 }

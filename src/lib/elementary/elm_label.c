@@ -11,6 +11,9 @@
 #include "elm_widget_layout.h"
 #include "elm_widget_label.h"
 
+#include "elm_label_internal_part.eo.h"
+#include "elm_part_helper.h"
+
 #define MY_CLASS ELM_LABEL_CLASS
 
 #define MY_CLASS_NAME "Elm_Label"
@@ -337,16 +340,17 @@ _stringshare_key_value_replace(const char **srcstring, const char *key, const ch
    return 0;
 }
 
-EOLIAN static Eina_Bool
-_elm_label_elm_layout_text_set(Eo *obj, Elm_Label_Data *sd, const char *part, const char *label)
+static Eina_Bool
+_elm_label_text_set(Eo *obj, Elm_Label_Data *sd, const char *part, const char *label)
 {
    ELM_WIDGET_DATA_GET_OR_RETURN(obj, wd, EINA_FALSE);
-   Eina_Bool int_ret = EINA_FALSE;
+   Eina_Bool int_ret = EINA_TRUE; // XXX: maybe Efl.Text.text_set should
+                                  // return bool
 
    if (!label) label = "";
    _label_format_set(wd->resize_obj, sd->format);
 
-   int_ret = elm_obj_layout_text_set(efl_super(obj, MY_CLASS), part, label);
+   efl_text_set(efl_part(efl_super(obj, MY_CLASS), part), label);
    if (int_ret)
      {
         sd->lastw = -1;
@@ -642,5 +646,9 @@ _elm_label_class_constructor(Efl_Class *klass)
 {
    evas_smart_legacy_type_register(MY_CLASS_NAME_LEGACY, klass);
 }
+
+ELM_PART_OVERRIDE(elm_label, ELM_LABEL, ELM_LAYOUT, Elm_Label_Data, Elm_Part_Data)
+ELM_PART_OVERRIDE_TEXT_SET(elm_label, ELM_LABEL, ELM_LAYOUT, Elm_Label_Data, Elm_Part_Data)
+#include "elm_label_internal_part.eo.c"
 
 #include "elm_label.eo.c"

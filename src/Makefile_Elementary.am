@@ -16,6 +16,7 @@ elm_public_eolian_files = \
 	lib/elementary/elm_dayselector.eo \
 	lib/elementary/elm_entry.eo \
 	lib/elementary/elm_fileselector.eo \
+	lib/elementary/elm_fileselector_internal_part.eo \
 	lib/elementary/efl_ui_flip.eo \
 	lib/elementary/efl_ui_flip_internal_part.eo \
 	lib/elementary/efl_ui_frame.eo \
@@ -41,12 +42,14 @@ elm_public_eolian_files = \
 	lib/elementary/elm_interface_fileselector.eo \
 	lib/elementary/elm_interface_scrollable.eo \
 	lib/elementary/elm_label.eo \
+	lib/elementary/elm_label_internal_part.eo \
 	lib/elementary/elm_layout.eo \
 	lib/elementary/elm_list.eo \
 	lib/elementary/elm_map.eo \
 	lib/elementary/elm_map_pan.eo \
 	lib/elementary/elm_menu.eo \
 	lib/elementary/elm_multibuttonentry.eo \
+	lib/elementary/elm_multibuttonentry_internal_part.eo \
 	lib/elementary/elm_notify.eo \
 	lib/elementary/efl_ui_nstate.eo \
 	lib/elementary/elm_pan.eo \
@@ -95,6 +98,7 @@ elm_public_eolian_files = \
 	lib/elementary/efl_ui_grid_static.eo \
 	lib/elementary/efl_ui_layout_internal_box.eo \
 	lib/elementary/efl_ui_layout_internal_table.eo \
+	lib/elementary/efl_ui_layout_internal_text.eo \
 	lib/elementary/elm_button_internal_part.eo \
 	lib/elementary/elm_ctxpopup_internal_part.eo \
 	lib/elementary/elm_dayselector_internal_part.eo \
@@ -136,12 +140,15 @@ elm_private_eolian_files = \
 elm_legacy_eolian_files = \
 	lib/elementary/elm_access.eo \
 	lib/elementary/elm_actionslider.eo \
+	lib/elementary/elm_actionslider_internal_part.eo \
 	lib/elementary/elm_box.eo \
 	lib/elementary/elm_bubble.eo \
+	lib/elementary/elm_bubble_internal_part.eo \
 	lib/elementary/elm_diskselector.eo \
 	lib/elementary/elm_diskselector_item.eo \
 	lib/elementary/elm_fileselector_button.eo \
 	lib/elementary/elm_fileselector_entry.eo \
+	lib/elementary/elm_fileselector_entry_internal_part.eo \
 	lib/elementary/elm_flipselector.eo \
 	lib/elementary/elm_grid.eo \
 	lib/elementary/elm_hoversel.eo \

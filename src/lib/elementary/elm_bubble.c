@@ -11,6 +11,9 @@
 #include "elm_widget_bubble.h"
 #include "elm_widget_layout.h"
 
+#include "elm_bubble_internal_part.eo.h"
+#include "elm_part_helper.h"
+
 #define MY_CLASS ELM_BUBBLE_CLASS
 
 #define MY_CLASS_NAME "Elm_Bubble"
@@ -113,12 +116,12 @@ _elm_bubble_elm_widget_focus_direction(Eo *obj, Elm_Bubble_Data *_pd EINA_UNUSED
             (content, base, degree, direction, direction_item, weight);
 }
 
-EOLIAN static Eina_Bool
-_elm_bubble_elm_layout_text_set(Eo *obj, Elm_Bubble_Data *_pd EINA_UNUSED, const char *part, const char *label)
+static Eina_Bool
+_elm_bubble_text_set(Eo *obj, Elm_Bubble_Data *_pd EINA_UNUSED, const char *part, const char *label)
 {
-   Eina_Bool int_ret = EINA_FALSE;
+   Eina_Bool int_ret = EINA_TRUE;
 
-   int_ret = elm_obj_layout_text_set(efl_super(obj, MY_CLASS), part, label);
+   efl_text_set(efl_part(efl_super(obj, MY_CLASS), part), label);
    if (!int_ret) return EINA_FALSE;
 
    if (part && (!strcmp(part, "info") || !strcmp(part, "elm.info")))
@@ -287,5 +290,9 @@ _elm_bubble_class_constructor(Efl_Class *klass)
 {
    evas_smart_legacy_type_register(MY_CLASS_NAME_LEGACY, klass);
 }
+
+ELM_PART_OVERRIDE(elm_bubble, ELM_BUBBLE, ELM_LAYOUT, Elm_Bubble_Data, Elm_Part_Data)
+ELM_PART_OVERRIDE_TEXT_SET(elm_bubble, ELM_BUBBLE, ELM_LAYOUT, Elm_Bubble_Data, Elm_Part_Data)
+#include "elm_bubble_internal_part.eo.c"
 
 #include "elm_bubble.eo.c"

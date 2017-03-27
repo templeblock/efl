@@ -255,25 +255,27 @@ _elm_fileselector_entry_elm_widget_disable(Eo *obj, Elm_Fileselector_Entry_Data 
    return EINA_TRUE;
 }
 
-EOLIAN static Eina_Bool
-_elm_fileselector_entry_elm_layout_text_set(Eo *obj, Elm_Fileselector_Entry_Data *sd, const char *part, const char *label)
+static Eina_Bool
+_elm_fileselector_entry_text_set(Eo *obj, Elm_Fileselector_Entry_Data *sd, const char *part, const char *label)
 {
+   Eina_Bool ret = EINA_TRUE;
    if (part && strcmp(part, "default"))
      {
-        return elm_obj_layout_text_set(efl_super(obj, MY_CLASS), part, label);
+        efl_text_set(efl_part(efl_super(obj, MY_CLASS), part), label);
+        return ret;
      }
 
    elm_object_text_set(sd->button, label);
    return EINA_TRUE;
 }
 
-EOLIAN static const char *
-_elm_fileselector_entry_elm_layout_text_get(Eo *obj, Elm_Fileselector_Entry_Data *sd, const char *part)
+static const char *
+_elm_fileselector_entry_text_get(Eo *obj, Elm_Fileselector_Entry_Data *sd, const char *part)
 {
    if (part && strcmp(part, "default"))
      {
         const char *text = NULL;
-        text = elm_obj_layout_text_get(efl_super(obj, MY_CLASS), part);
+        text = efl_text_get(efl_part(efl_super(obj, MY_CLASS), part));
         return text;
      }
 
@@ -681,6 +683,8 @@ ELM_PART_OVERRIDE(elm_fileselector_entry, ELM_FILESELECTOR_ENTRY, ELM_LAYOUT, El
 ELM_PART_OVERRIDE_CONTENT_SET(elm_fileselector_entry, ELM_FILESELECTOR_ENTRY, ELM_LAYOUT, Elm_Fileselector_Entry_Data, Elm_Part_Data)
 ELM_PART_OVERRIDE_CONTENT_GET(elm_fileselector_entry, ELM_FILESELECTOR_ENTRY, ELM_LAYOUT, Elm_Fileselector_Entry_Data, Elm_Part_Data)
 ELM_PART_OVERRIDE_CONTENT_UNSET(elm_fileselector_entry, ELM_FILESELECTOR_ENTRY, ELM_LAYOUT, Elm_Fileselector_Entry_Data, Elm_Part_Data)
+ELM_PART_OVERRIDE_TEXT_SET(elm_fileselector_entry, ELM_FILESELECTOR_ENTRY, ELM_LAYOUT, Elm_Fileselector_Entry_Data, Elm_Part_Data)
+ELM_PART_OVERRIDE_TEXT_GET(elm_fileselector_entry, ELM_FILESELECTOR_ENTRY, ELM_LAYOUT, Elm_Fileselector_Entry_Data, Elm_Part_Data)
 #include "elm_fileselector_entry_internal_part.eo.c"
 
 /* Efl.Part end */

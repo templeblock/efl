@@ -22,6 +22,7 @@
 #define MY_CLASS_NAME_LEGACY "elm_layout"
 
 Eo *_elm_layout_pack_proxy_get(Elm_Layout *obj, Edje_Part_Type type, const char *part);
+Eo *_elm_layout_text_proxy_get(Elm_Layout *obj, Edje_Part_Type type, const char *part);
 static void _efl_model_properties_changed_cb(void *, const Efl_Event *);
 
 static const char SIG_THEME_CHANGED[] = "theme,changed";
@@ -1291,7 +1292,7 @@ _elm_layout_efl_container_content_count(Eo *eo_obj EINA_UNUSED, Elm_Layout_Smart
    return eina_list_count(sd->subs);
 }
 
-EOLIAN static Eina_Bool
+static Eina_Bool
 _elm_layout_text_set(Eo *obj, Elm_Layout_Smart_Data *sd, const char *part, const char *text)
 {
    ELM_WIDGET_DATA_GET_OR_RETURN(obj, wd, EINA_FALSE);
@@ -1361,8 +1362,21 @@ _elm_layout_text_set(Eo *obj, Elm_Layout_Smart_Data *sd, const char *part, const
    return EINA_TRUE;
 }
 
-EOLIAN static const char*
-_elm_layout_text_get(Eo *obj, Elm_Layout_Smart_Data *sd, const char *part)
+EAPI Eina_Bool
+elm_layout_text_set(Eo *obj, const char *part, const char *text)
+{
+   ELM_LAYOUT_CHECK(obj) EINA_FALSE;
+   Elm_Layout_Smart_Data *sd = efl_data_scope_get(obj, MY_CLASS);
+
+   if (!_elm_layout_part_aliasing_eval(obj, sd, &part, EINA_TRUE))
+     return EINA_FALSE;
+
+   efl_text_set(efl_part(obj, part), text);
+   return EINA_TRUE;
+}
+
+static const char*
+_elm_layout_text_get(const Eo *obj, Elm_Layout_Smart_Data *sd, const char *part)
 {
    ELM_WIDGET_DATA_GET_OR_RETURN(obj, wd, NULL);
 
@@ -1370,6 +1384,18 @@ _elm_layout_text_get(Eo *obj, Elm_Layout_Smart_Data *sd, const char *part)
      return NULL;
 
    return edje_object_part_text_get(wd->resize_obj, part);
+}
+
+EAPI const char *
+elm_layout_text_get(const Evas_Object *obj, const char *part)
+{
+   ELM_LAYOUT_CHECK(obj) NULL;
+   Elm_Layout_Smart_Data *sd = efl_data_scope_get(obj, MY_CLASS);
+
+   if (!_elm_layout_part_aliasing_eval(obj, sd, &part, EINA_TRUE))
+     return NULL;
+
+   return efl_text_get(efl_part(obj, part));
 }
 
 static void
@@ -2336,15 +2362,16 @@ elm_layout_table_clear(Elm_Layout *obj, const char *part, Eina_Bool clear)
 /* Efl.Part implementation */
 
 static EOLIAN Efl_Object *
-_elm_layout_efl_part_part(const Eo *obj, Elm_Layout_Smart_Data *sd,
+_elm_layout_efl_part_part(const Eo *obj, Elm_Layout_Smart_Data *sd EINA_UNUSED,
                           const char *part)
 {
    Edje_Part_Type type;
    Elm_Part_Data *pd;
    Eo *proxy;
 
-   if (!_elm_layout_part_aliasing_eval(obj, sd, &part, EINA_FALSE))
-     return NULL;
+   // XXX: NULL aliases are deprecated
+   // There is no distinguishing between types of aliases in new efl_part api
+   // (legacy is preserved, though)
 
    ELM_WIDGET_DATA_GET_OR_RETURN((Eo *) obj, wd, NULL);
 
@@ -2372,6 +2399,8 @@ ELM_PART_IMPLEMENT_DESTRUCTOR(elm_layout, ELM_LAYOUT, Elm_Layout_Smart_Data, Elm
 ELM_PART_IMPLEMENT_CONTENT_SET(elm_layout, ELM_LAYOUT, Elm_Layout_Smart_Data, Elm_Part_Data)
 ELM_PART_IMPLEMENT_CONTENT_GET(elm_layout, ELM_LAYOUT, Elm_Layout_Smart_Data, Elm_Part_Data)
 ELM_PART_IMPLEMENT_CONTENT_UNSET(elm_layout, ELM_LAYOUT, Elm_Layout_Smart_Data, Elm_Part_Data)
+ELM_PART_IMPLEMENT_TEXT_SET(elm_layout, ELM_LAYOUT, Elm_Layout_Smart_Data, Elm_Part_Data)
+ELM_PART_IMPLEMENT_TEXT_GET(elm_layout, ELM_LAYOUT, Elm_Layout_Smart_Data, Elm_Part_Data)
 #include "elm_layout_internal_part.eo.c"
 
 /* Efl.Part end */
