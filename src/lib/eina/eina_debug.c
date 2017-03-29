@@ -89,6 +89,12 @@ static void *_poll_timer_data = NULL;
 
 static Eina_Semaphore _thread_cmd_ready_sem;
 
+typedef enum
+{
+   LOCAL,
+   FAKE
+} Conn_Type;
+
 typedef struct
 {
    int magic; /* Used to certify the validity of the struct */
@@ -98,6 +104,7 @@ typedef struct
 
 struct _Eina_Debug_Session
 {
+   Conn_Type conn_type;
    Eina_List **cbs; /* Table of callbacks lists indexed by opcode id */
    Eina_List *opcode_reply_infos;
    Eina_Debug_Dispatch_Cb dispatch_cb; /* Session dispatcher */
@@ -107,6 +114,7 @@ struct _Eina_Debug_Session
 };
 
 static void _opcodes_register_all();
+static void _opcodes_unregister_all(Eina_Debug_Session *session);
 static void _thread_start(Eina_Debug_Session *session);
 
 EAPI int
@@ -114,7 +122,7 @@ eina_debug_session_send_to_thread(Eina_Debug_Session *session, int dest_id, int 
 {
    Eina_Debug_Packet_Header hdr;
 
-   if (!session) return -1;
+   if (!session || session->conn_type == FAKE) return -1;
    if (op == EINA_DEBUG_OPCODE_INVALID) return -1;
    /* Preparation of the packet header */
    hdr.size = size + sizeof(Eina_Debug_Packet_Header);
@@ -157,6 +165,14 @@ _daemon_greet(Eina_Debug_Session *session)
    else
       buf[8] = '\0';
    eina_debug_session_send(session, 0, EINA_DEBUG_OPCODE_HELLO, buf, size);
+}
+
+static Eina_Debug_Session *
+_session_free(Eina_Debug_Session *session)
+{
+   _opcodes_unregister_all(session);
+   free(session);
+   return NULL;
 }
 
 #ifndef _WIN32
@@ -217,7 +233,8 @@ eina_debug_session_terminate(Eina_Debug_Session *session)
 {
    /* Close fd here so the thread terminates its own session by itself */
    if (!session) return;
-   close(session->fd_in);
+   if (session->conn_type != FAKE) close(session->fd_in);
+   else _session_free(session);
 }
 
 EAPI void
@@ -483,6 +500,7 @@ eina_debug_local_connect(Eina_Bool is_master)
 #endif
 
    Eina_Debug_Session *session = calloc(1, sizeof(*session));
+   session->conn_type = LOCAL;
    session->dispatch_cb = eina_debug_dispatch;
    session->fd_out = session->fd_in = -1;
    // try this socket file - it will likely be:
@@ -532,6 +550,16 @@ err:
    (void) type;
 #endif
    return NULL;
+}
+
+EAPI Eina_Debug_Session *
+eina_debug_fake_session_create()
+{
+   Eina_Debug_Session *session = calloc(1, sizeof(*session));
+   session->conn_type = FAKE;
+   session->dispatch_cb = eina_debug_dispatch;
+   session->fd_out = session->fd_in = -1;
+   return session;
 }
 
 EAPI Eina_Bool
@@ -592,9 +620,7 @@ _monitor(void *_data)
                {
                   if (events[i].events & EPOLLHUP)
                     {
-                       _opcodes_unregister_all(_session);
-                       free(_session);
-                       _session = NULL;
+                       _session = _session_free(_session);
                     }
                   else if (events[i].events & EPOLLIN)
                     {
@@ -686,16 +712,30 @@ eina_debug_opcodes_register(Eina_Debug_Session *session, const Eina_Debug_Opcode
    if (!session) session = _last_local_session;
    if (!session) return;
 
-   _opcode_reply_info *info = malloc(sizeof(*info));
-   info->ops = ops;
-   info->status_cb = status_cb;
+   if (session->conn_type != FAKE)
+     {
+        _opcode_reply_info *info = malloc(sizeof(*info));
+        info->ops = ops;
+        info->status_cb = status_cb;
 
-   session->opcode_reply_infos = eina_list_append(
-         session->opcode_reply_infos, info);
+        session->opcode_reply_infos = eina_list_append(
+              session->opcode_reply_infos, info);
 
-   //send only if _session's fd connected, if not -  it will be sent when connected
-   if(session && session->fd_in != -1)
-      _opcodes_registration_send(session, info);
+        //send only if session's fd connected, if not -  it will be sent when connected
+        if(session && session->fd_in != -1)
+           _opcodes_registration_send(session, info);
+     }
+   else
+     {
+        int i = 0;
+        while(ops[i].opcode_name)
+          {
+             if (ops[i].opcode_id &&
+                   *(ops[i].opcode_id) != EINA_DEBUG_OPCODE_INVALID)
+                _static_opcode_register(session, *(ops[i].opcode_id), ops[i].cb);
+             i++;
+          }
+     }
 }
 
 static Eina_Debug_Error

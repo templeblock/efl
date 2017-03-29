@@ -156,6 +156,19 @@ EAPI void eina_debug_disable(void);
 EAPI Eina_Debug_Session *eina_debug_local_connect(Eina_Bool is_master);
 
 /**
+ * @brief Create a fake session
+ *
+ * This feature is needed for Clouseau when loading a snapshot file. The file
+ * data is a list of Eina Debug buffers that need to be consumed in the same
+ * way as if they were received from an existing connection to a daemon.
+ * For this reason, we need to create a fake session, as it won't connect to
+ * any daemon and register opcodes manually.
+ *
+ * @return EINA_TRUE on success, EINA_FALSE otherwise.
+ */
+EAPI Eina_Debug_Session *eina_debug_fake_session_create();
+
+/**
  * @brief Terminate the session
  *
  * @param session the session to terminate
