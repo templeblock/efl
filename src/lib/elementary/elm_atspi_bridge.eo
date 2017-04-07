@@ -1,3 +1,5 @@
+type Eldbus_Object: __undefined_type;
+
 class Elm.Atspi.Bridge (Efl.Object)
 {
    [[AT-SPI bridge class]]
@@ -63,3 +65,4 @@ class Elm.Atspi.Bridge (Efl.Object)
       disconnected; [[Disconnected from AT-SPI2 bus]]
    }
 }
+

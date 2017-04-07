@@ -182,7 +182,7 @@ test_win_socket(void *data EINA_UNUSED, Evas_Object *obj EINA_UNUSED, void *even
    /* for socket window */
    win_socket = elm_win_add(NULL, "Window Socket", ELM_WIN_SOCKET_IMAGE);
 
-   if (!elm_win_socket_listen(win_socket, "ello", 0, EINA_FALSE))
+   if (!elm_win_socket_listen(win_socket, "ello2", 0, EINA_FALSE))
      {
         printf("Fail to elm win socket listen \n");
         evas_object_del(win_socket);

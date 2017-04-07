@@ -45,6 +45,7 @@ _elm_plug_disconnected(Ecore_Evas *ee)
    efl_event_callback_legacy_call(plug, ELM_PLUG_EVENT_IMAGE_DELETED, NULL);
    /* TODO: was a typo. Deprecated, remove in future releases: */
    evas_object_smart_callback_call(plug, "image.deleted", NULL);
+   ERR("Plug diconnected (%s)", ee);
 }
 
 static void
@@ -56,6 +57,13 @@ _elm_plug_resized(Ecore_Evas *ee)
 
    ecore_evas_geometry_get(ee, NULL, NULL, &(size.w), &(size.h));
    efl_event_callback_legacy_call(plug, ELM_PLUG_EVENT_IMAGE_RESIZED, &size);
+}
+
+static void
+_elm_plug_message(Ecore_Evas *ee, int domain, int msg, void *data, int size)
+{
+   ERR("Child Message (%p) recieved: %d %d", ee, domain, msg);
+   int payload = 1;
 }
 
 EOLIAN static Eina_Bool
@@ -142,7 +150,7 @@ elm_plug_add(Evas_Object *parent)
 
 EOLIAN static Eo *
 _elm_plug_efl_object_constructor(Eo *obj, void *sd EINA_UNUSED)
-{
+
    obj = efl_constructor(efl_super(obj, MY_CLASS));
    efl_canvas_object_type_set(obj, MY_CLASS_NAME_LEGACY);
    evas_object_smart_callbacks_descriptions_set(obj, _smart_callbacks);
@@ -156,6 +164,36 @@ _elm_plug_image_object_get(Eo *obj, void *sd EINA_UNUSED)
 {
    ELM_WIDGET_DATA_GET_OR_RETURN(obj, wd, NULL);
    return wd->resize_obj;
+}
+
+static void
+_elm_plug_shown(Ecore_Evas *ee)
+{
+   ERR("Plug showing remote image");
+}
+
+static void
+_elm_plug_hide(Ecore_Evas *ee)
+{
+   ERR("Plug hiding remote image");
+}
+
+static Eina_Bool
+_timer_cb(void *data)
+{
+   Ecore_Evas *ee = data;
+   int msg = 1;
+   ERR("Send message to child");
+   ecore_evas_msg_parent_send(ee, 123, 0, &msg, sizeof(msg));
+   return EINA_TRUE;
+}
+
+static void
+_elm_plug_atspi_a11y_init(Ecore_Evas *ee)
+{
+   int msg = 1;
+   // send request to obtain parent address
+   ecore_evas_msg_parent_send(ee, 123, 0, &msg, sizeof(msg));
 }
 
 EOLIAN static Eina_Bool
@@ -175,8 +213,15 @@ _elm_plug_connect(Eo *obj, void *sd EINA_UNUSED, const char *svcname, int svcnum
         if (!ee) return EINA_FALSE;
 
         ecore_evas_data_set(ee, PLUG_KEY, obj);
+        ecore_evas_callback_show_set(ee, _elm_plug_shown);
+        ecore_evas_callback_hide_set(ee, _elm_plug_hide);
         ecore_evas_callback_delete_request_set(ee, _elm_plug_disconnected);
         ecore_evas_callback_resize_set(ee, _elm_plug_resized);
+        ecore_evas_callback_msg_handle_set(ee, _elm_plug_message);
+
+        if (_elm_config->atspi_mode)
+          _elm_plug_atspi_a11y_init(ee);
+
         return EINA_TRUE;
      }
 

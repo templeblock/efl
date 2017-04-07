@@ -32,7 +32,7 @@ cb_plug_connect(void *data)
    timer= evas_object_data_get(obj, "test-timer");
    if (!timer) return ECORE_CALLBACK_CANCEL;
 
-   if (elm_plug_connect(obj, "ello", 0, EINA_FALSE))
+   if (elm_plug_connect(obj, "ello2", 0, EINA_FALSE))
      {
         printf("plug connect to server[ello]\n");
         evas_object_data_del(obj, "test-timer");
