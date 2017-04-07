@@ -1,0 +1,46 @@
+import evas_types;
+
+class Efl.Rotate_Animation (Efl.Object_Animation)
+{
+   [[Efl rotate animation class]]
+   legacy_prefix: evas_object_animation;
+   data: Evas_Object_Rotate_Animation_Data;
+   methods {
+      @property angle {
+         set {
+         }
+         get {
+         }
+         values {
+            from_angle: double; [[Rotation angle when animation starts]]
+            to_angle: double; [[Rotation angle when animation ends]]
+         }
+      }
+      @property relative_pivot {
+         set {
+         }
+         get {
+         }
+         values {
+            x: double; [[Relative pivot value along x axis. The left is 0.0 and the right is 1.0.]]
+            y: double; [[Relative pivot value along x axis. The top is 0.0 and the bottom is 1.0.]]
+            z: double; [[Relative pivot value along x axis. The front is 0.0 and the rear is 1.0.]]
+         }
+      }
+      @property absolute_pivot {
+         set {
+         }
+         get {
+         }
+         values {
+            x: Evas.Coord; [[Absolute pivot value along x axis]]
+            y: Evas.Coord; [[Absolute pivot value along x axis]]
+            z: Evas.Coord; [[Absolute pivot value along x axis]]
+         }
+      }
+   }
+   implements {
+      Efl.Object.constructor;
+      Efl.Object.destructor;
+   }
+}

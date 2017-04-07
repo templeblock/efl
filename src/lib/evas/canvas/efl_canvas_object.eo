@@ -629,6 +629,22 @@ abstract Efl.Canvas.Object (Efl.Object, Efl.Gfx, Efl.Gfx.Stack, Efl.Animator,
             enable: bool; [[Enable "no-render" mode.]]
          }
       }
+      event_animation_set {
+         [[Set the $animation which starts when the given $event_name happens to the object.]]
+         params {
+            @in event_type: Efl.Animation.Event_Type; [[The event type the given $animation is set for.]]
+            @in animation: Efl.Animation; [[The animation which starts when the given $event_name happens to the object.]]
+         }
+         legacy: null;
+      }
+      event_animation_get {
+         [[Get the $animation which starts when the given $event happens to the object.]]
+         params {
+            @in event_type: Efl.Animation.Event_Type; [[The event type the given $animation is set for.]]
+         }
+         legacy: null;
+         return: Efl.Animation @warn_unused;
+      }
    }
    constructors {
       .legacy_ctor;

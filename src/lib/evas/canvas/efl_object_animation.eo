@@ -1,0 +1,19 @@
+import evas_types;
+
+abstract Efl.Object_Animation (Efl.Animation)
+{
+   [[Efl object animation abstract class]]
+   legacy_prefix: evas_object_animation;
+   data: Evas_Object_Object_Animation_Data;
+   methods {
+      @property target_object {
+         set {
+         }
+         get {
+         }
+         values {
+            target: Efl.Canvas.Object; [[Target object which is applied animation]]
+         }
+      }
+   }
+}

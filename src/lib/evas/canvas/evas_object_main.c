@@ -972,6 +972,36 @@ _is_event_blocked(Eo *eo_obj, const Efl_Event_Description *desc,
    return EINA_FALSE;
 }
 
+static Eina_Bool
+_efl_animation_event_type_is_inform_call(Efl_Animation_Event_Type event)
+{
+   if ((event == EFL_ANIMATION_EVENT_TYPE_SHOW) ||
+       (event == EFL_ANIMATION_EVENT_TYPE_HIDE))
+     return EINA_TRUE;
+
+   return EINA_FALSE;
+}
+
+static Efl_Animation_Event_Type
+_efl_animation_event_type_get(const char *event_str)
+{
+   if (!event_str) return -1;
+
+   if (!strncmp(event_str, EFL_ANIMATION_EVENT_TYPE_SHOW_STR,
+                strlen(EFL_ANIMATION_EVENT_TYPE_SHOW_STR)))
+     return EFL_ANIMATION_EVENT_TYPE_SHOW;
+
+   else if (!strncmp(event_str, EFL_ANIMATION_EVENT_TYPE_HIDE_STR,
+                     strlen(EFL_ANIMATION_EVENT_TYPE_HIDE_STR)))
+     return EFL_ANIMATION_EVENT_TYPE_HIDE;
+
+   else if (!strncmp(event_str, EFL_ANIMATION_EVENT_TYPE_CLICKED_STR,
+                     strlen(EFL_ANIMATION_EVENT_TYPE_CLICKED_STR)))
+     return EFL_ANIMATION_EVENT_TYPE_CLICKED;
+
+   return -1;
+}
+
 EOLIAN static Eina_Bool
 _efl_canvas_object_efl_object_event_callback_call(Eo *eo_obj,
                                                   Evas_Object_Protected_Data *obj EINA_UNUSED,
@@ -979,6 +1009,21 @@ _efl_canvas_object_efl_object_event_callback_call(Eo *eo_obj,
                                                   void *event_info)
 {
    if (_is_event_blocked(eo_obj, desc, event_info)) return EINA_FALSE;
+
+   if (desc && desc->name)
+     {
+        Efl_Animation_Event_Type event_type =
+           _efl_animation_event_type_get(desc->name);
+
+        if (!_efl_animation_event_type_is_inform_call(event_type))
+          {
+             Efl_Animation *anim =
+                efl_canvas_object_event_animation_get(eo_obj, event_type);
+             if (anim)
+               efl_animation_start(anim);
+          }
+     }
+
    return efl_event_callback_call(efl_super(eo_obj, MY_CLASS),
                                   desc, event_info);
 }
@@ -990,6 +1035,21 @@ _efl_canvas_object_efl_object_event_callback_legacy_call(Eo *eo_obj,
                                                          void *event_info)
 {
    if (_is_event_blocked(eo_obj, desc, event_info)) return EINA_FALSE;
+
+   if (desc && desc->name)
+     {
+        Efl_Animation_Event_Type event_type =
+           _efl_animation_event_type_get(desc->name);
+
+        if (!_efl_animation_event_type_is_inform_call(event_type))
+          {
+             Efl_Animation *anim =
+                efl_canvas_object_event_animation_get(eo_obj, event_type);
+             if (anim)
+               efl_animation_start(anim);
+          }
+     }
+
    return efl_event_callback_legacy_call(efl_super(eo_obj, MY_CLASS),
                                          desc, event_info);
 }
@@ -1010,6 +1070,7 @@ _efl_canvas_object_efl_object_destructor(Eo *eo_obj, Evas_Object_Protected_Data 
 
    edata = efl_data_scope_get(evas_object_evas_get(eo_obj), EVAS_CANVAS_CLASS);
    evas_object_hide(eo_obj);
+
    EINA_LIST_FREE (obj->focused_by_seats, dev)
      {
         event_id = _evas_event_counter;
@@ -1679,11 +1740,23 @@ _show(Evas_Object *eo_obj, Evas_Object_Protected_Data *obj)
      }
    evas_object_update_bounding_box(eo_obj, obj, NULL);
    evas_object_inform_call_show(eo_obj);
+
+   Efl_Animation *anim =
+      efl_canvas_object_event_animation_get(eo_obj,
+                                            EFL_ANIMATION_EVENT_TYPE_SHOW);
+   if (anim)
+     efl_animation_start(anim);
 }
 
 static void
 _hide(Evas_Object *eo_obj, Evas_Object_Protected_Data *obj)
 {
+   Efl_Animation *anim =
+      efl_canvas_object_event_animation_get(eo_obj,
+                                            EFL_ANIMATION_EVENT_TYPE_HIDE);
+   if (anim)
+     efl_animation_start(anim);
+
    if (obj->is_smart && obj->smart.smart && obj->smart.smart->smart_class->hide)
      {
         obj->smart.smart->smart_class->hide(eo_obj);
@@ -2564,5 +2637,42 @@ evas_object_size_hint_display_mode_get(const Evas_Object *obj)
    EFL_OBJECT_OP_FUNC(efl_dbg_info_get, _efl_canvas_object_efl_object_dbg_info_get), \
    EFL_OBJECT_OP_FUNC(efl_event_callback_legacy_call, _efl_canvas_object_efl_object_event_callback_legacy_call), \
    EFL_OBJECT_OP_FUNC(efl_event_callback_call, _efl_canvas_object_efl_object_event_callback_call)
+
+static Eina_Bool
+_efl_animation_event_type_is_valid(Efl_Animation_Event_Type event)
+{
+   if ((event < 0) || (event >= EFL_ANIMATION_EVENT_TYPE_COUNT))
+     return EINA_FALSE;
+
+   return EINA_TRUE;
+}
+
+EOLIAN void
+_efl_canvas_object_event_animation_set(Eo *eo_obj EINA_UNUSED,
+                                       Evas_Object_Protected_Data *pd,
+                                       Efl_Animation_Event_Type event_type,
+                                       Efl_Animation *animation)
+{
+   if (!_efl_animation_event_type_is_valid(event_type))
+     return;
+
+   //Stop current animation
+   Efl_Animation *cur_anim = pd->event_anim[event_type];
+   efl_animation_cancel(cur_anim);
+
+   pd->event_anim[event_type] = animation;
+}
+
+EOLIAN Efl_Animation *
+_efl_canvas_object_event_animation_get(Eo *eo_obj EINA_UNUSED,
+                                       Evas_Object_Protected_Data *pd,
+                                       Efl_Animation_Event_Type event_type)
+{
+   if (!_efl_animation_event_type_is_valid(event_type))
+     return NULL;
+
+   Efl_Animation *cur_anim = pd->event_anim[event_type];
+   return cur_anim;
+}
 
 #include "canvas/efl_canvas_object.eo.c"

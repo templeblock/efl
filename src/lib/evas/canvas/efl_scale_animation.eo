@@ -1,0 +1,54 @@
+import evas_types;
+
+class Efl.Scale_Animation (Efl.Object_Animation)
+{
+   [[Efl scale animation class]]
+   legacy_prefix: evas_object_animation;
+   data: Evas_Object_Scale_Animation_Data;
+   methods {
+      @property scale {
+         set {
+         }
+         get {
+         }
+         values {
+            from_scale: double; [[Scale factor when animation starts]]
+            to_scale: double; [[Scale factor when animation ends]]
+         }
+      }
+      @property scale_x {
+         set {
+         }
+         get {
+         }
+         values {
+            from_x: double; [[Scale factor along x axis when animation starts]]
+            to_x: double; [[Scale factor along x axis when animation ends]]
+         }
+      }
+      @property scale_y {
+         set {
+         }
+         get {
+         }
+         values {
+            from_y: double; [[Scale factor along y axis when animation starts]]
+            to_y: double; [[Scale factor along y axis when animation ends]]
+         }
+      }
+      @property scale_z {
+         set {
+         }
+         get {
+         }
+         values {
+            from_z: double; [[Scale factor along z axis when animation starts]]
+            to_z: double; [[Scale factor along z axis when animation ends]]
+         }
+      }
+   }
+   implements {
+      Efl.Object.constructor;
+      Efl.Object.destructor;
+   }
+}

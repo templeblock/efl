@@ -62,7 +62,14 @@
  * @}
  */
 
+#include "canvas/efl_animation.eo.h"
 #include "canvas/efl_canvas_object.eo.h"
+
+#include "canvas/efl_object_animation.eo.h"
+#include "canvas/efl_alpha_animation.eo.h"
+#include "canvas/efl_rotate_animation.eo.h"
+#include "canvas/efl_scale_animation.eo.h"
+#include "canvas/efl_translate_animation.eo.h"
 #endif /* EFL_EO_API_SUPPORT */
 
 #if defined(EFL_BETA_API_SUPPORT) && defined(EFL_EO_API_SUPPORT)

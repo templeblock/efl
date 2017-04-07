@@ -1,0 +1,31 @@
+import evas_types;
+
+abstract Efl.Animation (Efl.Object)
+{
+   [[Efl animation abstract class]]
+   legacy_prefix: evas_object_animation;
+   data: Evas_Object_Animation_Data;
+   methods {
+      @property duration {
+         set {
+         }
+         get {
+         }
+         values {
+            duration: double; [[Duration value]]
+         }
+      }
+      is_deleted {
+         [[Check if animation is deleted]]
+         return: bool; [[$true if deleted, $false otherwise]]
+      }
+      start {
+         [[Start animation.]]
+         return: bool; [[$true on success, $false otherwise]]
+      }
+      cancel {
+         [[Cancel animation.]]
+         return: bool; [[$true on success, $false otherwise]]
+      }
+   }
+}

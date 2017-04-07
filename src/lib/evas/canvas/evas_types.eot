@@ -451,3 +451,15 @@ enum Evas.Canvas3D.Material_Attrib
 type Evas.Canvas3D.Surface_Func: __undefined_type; [[Evas 3D canvas surface function type]]
 
 struct Efl.Canvas.Text.Annotation; [[EFL text annotations data structure]]
+
+enum Efl.Animation.Event_Type
+{
+   [[Animation event type
+
+     @since 1.20]]
+
+   show = 0, [["show" event type]]
+   hide,     [["hide" event type]]
+   clicked,  [["clicked" event type]]
+   count     [[total count of event type]]
+}

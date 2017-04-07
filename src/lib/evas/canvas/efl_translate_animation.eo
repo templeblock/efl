@@ -1,0 +1,102 @@
+import evas_types;
+
+class Efl.Translate_Animation (Efl.Object_Animation)
+{
+   [[Efl translate animation class]]
+   legacy_prefix: evas_object_animation;
+   data: Evas_Object_Translate_Animation_Data;
+   methods {
+      @property translate {
+         set {
+         }
+         get {
+         }
+         values {
+            from_x: Evas.Coord; [[Distance moved along x axis when animation starts]]
+            from_y: Evas.Coord; [[Distance moved along y axis when animation starts]]
+            from_z: Evas.Coord; [[Distance moved along z axis when animation starts]]
+            to_x: Evas.Coord; [[Distance moved along x axis when animation ends]]
+            to_y: Evas.Coord; [[Distance moved along y axis when animation ends]]
+            to_z: Evas.Coord; [[Distance moved along z axis when animation ends]]
+         }
+      }
+      @property translate_x {
+         set {
+         }
+         get {
+         }
+         values {
+            from_x: Evas.Coord; [[Distance moved along x axis when animation starts]]
+            to_x: Evas.Coord; [[Distance moved along x axis when animation ends]]
+         }
+      }
+      @property translate_y {
+         set {
+         }
+         get {
+         }
+         values {
+            from_y: Evas.Coord; [[Distance moved along y axis when animation starts]]
+            to_y: Evas.Coord; [[Distance moved along y axis when animation ends]]
+         }
+      }
+      @property translate_z {
+         set {
+         }
+         get {
+         }
+         values {
+            from_z: Evas.Coord; [[Distance moved along z axis when animation starts]]
+            to_z: Evas.Coord; [[Distance moved along z axis when animation ends]]
+         }
+      }
+      @property coordinate {
+         set {
+         }
+         get {
+         }
+         values {
+            from_x: Evas.Coord; [[X coordinate when animation starts]]
+            from_y: Evas.Coord; [[Y coordinate when animation starts]]
+            from_z: Evas.Coord; [[Z coordinate when animation starts]]
+            to_x: Evas.Coord; [[X coordinate when animation ends]]
+            to_y: Evas.Coord; [[Y coordinate when animation ends]]
+            to_z: Evas.Coord; [[Z coordinate when animation ends]]
+         }
+      }
+      @property coordinate_x {
+         set {
+         }
+         get {
+         }
+         values {
+            from_x: Evas.Coord; [[X coordinate when animation starts]]
+            to_x: Evas.Coord; [[X coordinate when animation ends]]
+         }
+      }
+      @property coordinate_y {
+         set {
+         }
+         get {
+         }
+         values {
+            from_y: Evas.Coord; [[Y coordinate when animation starts]]
+            to_y: Evas.Coord; [[Y coordinate when animation ends]]
+         }
+      }
+      @property coordinate_z {
+         set {
+         }
+         get {
+         }
+         values {
+            from_z: Evas.Coord; [[Z coordinate when animation starts]]
+            to_z: Evas.Coord; [[Z coordinate when animation ends]]
+         }
+      }
+   }
+   implements {
+      Efl.Object.constructor;
+      Efl.Object.destructor;
+   }
+}
