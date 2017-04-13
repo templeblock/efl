@@ -13,6 +13,46 @@ class Elm.Atspi.Bridge (Efl.Object)
             }
          }
       }
+      @property root {
+         [[Root object of accessible hierarchy exposed by bridge. ]]
+         get {
+         }
+         set {
+         }
+         values {
+            ret: Efl.Object; [[Root accessible object, or null if not set ]]
+         }
+      }
+      connect {
+           [[ Enforce bridge to connect to accessibility bus.]]
+      }
+      disconnect {
+           [[ Enforce bridge to disconnect from accessibility bus.]]
+      }
+      on_connected {
+           [[ Invoked when bridge connects to accessibility dbus daemon.
+              Function is invoked by a bridge, should not be called explicite.]]
+      }
+      on_disconnected {
+           [[ Invoked when bridge disconnects from accessibility dbus daemon.
+              Function is invoked by a bridge, should not be called explicite.]]
+      }
+      @property auto_connect {
+           [[ Indicate if bridge should automatically connect/disconnect accessibility
+              bus if platform accessibility mode is enabled/disabled. This means that
+              bridge will try to connect/disconnect accessibility dbus daemon if
+              "ScreenReaderEnabled" flag is switched on/off on session bus.
+
+              The default value of auto_connect property is true.]]
+           get {
+           }
+           set {
+           }
+           values {
+               ret: bool; [[ True if bridge will automatically connect/disconnect
+                       to accessibility bus]]
+           }
+      }
    }
    implements {
       Efl.Object.constructor;
