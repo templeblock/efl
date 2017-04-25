@@ -1330,26 +1330,25 @@ evas_map_util_clockwise_get(Evas_Map *m)
 /* If the return value is true, the map surface should be redrawn.          */
 /****************************************************************************/
 Eina_Bool
-evas_object_map_update(Evas_Object *eo_obj,
-                       int x, int y,
-                       int imagew, int imageh,
-                       int uvw, int uvh)
+evas_object_map_update(Evas_Object *eo_obj, int x, int y, int w, int h)
 {
    Evas_Object_Protected_Data *obj = efl_data_scope_get(eo_obj, EFL_CANVAS_OBJECT_CLASS);
    const Evas_Map_Point *p, *p_end;
    RGBA_Map_Point *pts, *pt;
 
    if (!obj) return EINA_FALSE;
-   if (obj->map->spans)
+   if (!obj->changed_map)
      {
-        if (obj->map->spans->x != x || obj->map->spans->y != y ||
-            obj->map->spans->image.w != imagew || obj->map->spans->image.h != imageh ||
-            obj->map->spans->uv.w != uvw || obj->map->spans->uv.h != uvh)
-          obj->changed_map = EINA_TRUE;
-     }
-   else
-     {
-        obj->changed_map = EINA_TRUE;
+        if (obj->map->spans)
+          {
+             if ((obj->map->spans->x != x) || (obj->map->spans->y != y) ||
+                 (obj->map->spans->w != w) || (obj->map->spans->h != h))
+               obj->changed_map = EINA_TRUE;
+          }
+        else
+          {
+             obj->changed_map = EINA_TRUE;
+          }
      }
 
    evas_object_map_move_sync(eo_obj);
@@ -1385,10 +1384,8 @@ evas_object_map_update(Evas_Object *eo_obj,
         map_write->spans->count = obj->map->cur.map->count;
         map_write->spans->x = x;
         map_write->spans->y = y;
-        map_write->spans->uv.w = uvw;
-        map_write->spans->uv.h = uvh;
-        map_write->spans->image.w = imagew;
-        map_write->spans->image.h = imageh;
+        map_write->spans->w = w;
+        map_write->spans->h = h;
 
         pts = obj->map->spans->pts;
 
@@ -1415,14 +1412,12 @@ evas_object_map_update(Evas_Object *eo_obj,
         pt->fx = p->px + obj->layer->evas->framespace.x;
         pt->fy = p->py + obj->layer->evas->framespace.y;
         pt->fz = p->z;
-        if ((uvw == 0) || (imagew == 0)) pt->u = 0;
-        else pt->u = ((lround(p->u) * imagew) / uvw) * FP1;
-        if ((uvh == 0) || (imageh == 0)) pt->v = 0;
-        else pt->v = ((lround(p->v) * imageh) / uvh) * FP1;
+        pt->u = lround(p->u) * FP1;
+        pt->v = lround(p->v) * FP1;
         if      (pt->u < 0) pt->u = 0;
-        else if (pt->u > (imagew * FP1)) pt->u = (imagew * FP1);
+        else if (pt->u > (w * FP1)) pt->u = (w * FP1);
         if      (pt->v < 0) pt->v = 0;
-        else if (pt->v > (imageh * FP1)) pt->v = (imageh * FP1);
+        else if (pt->v > (h * FP1)) pt->v = (h * FP1);
         pt->col = ARGB_JOIN(p->a, p->r, p->g, p->b);
      }
    if (obj->map->cur.map->count & 0x1)

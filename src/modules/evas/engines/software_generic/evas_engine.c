@@ -2783,10 +2783,8 @@ _map_draw_thread_cmd(RGBA_Image *src, RGBA_Image *dst, RGBA_Draw_Context *dc, RG
    cm->map = calloc(1, sizeof(RGBA_Map) +
                     sizeof(RGBA_Map_Point) * map->count);
    cm->map->engine_data = map->engine_data;
-   cm->map->image.w = map->image.w;
-   cm->map->image.h = map->image.h;
-   cm->map->uv.w = map->uv.w;
-   cm->map->uv.h = map->uv.h;
+   cm->map->w = map->w;
+   cm->map->h = map->h;
    cm->map->x = map->x;
    cm->map->y = map->y;
    cm->map->count = map->count;

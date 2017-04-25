@@ -937,11 +937,7 @@ struct _RGBA_Map
 {
    void *engine_data;
 
-   struct {
-      int w, h;
-   } image, uv;
-
-   int x, y;
+   int x, y, w, h;
    int count;
 
    RGBA_Map_Point pts[1];

@@ -708,10 +708,14 @@ _efl_canvas_image_internal_efl_gfx_view_view_size_get(Eo *eo_obj, Evas_Image_Dat
    int uvw, uvh;
    Evas_Object_Protected_Data *source = NULL;
    Evas_Object_Protected_Data *obj;
+   Evas_Image_Data *oi;
 
    obj = efl_data_scope_get(eo_obj, EFL_CANVAS_OBJECT_CLASS);
    if (o->cur->source)
-     source = efl_data_scope_get(o->cur->source, EFL_CANVAS_OBJECT_CLASS);
+     {
+        source = efl_data_scope_get(o->cur->source, EFL_CANVAS_OBJECT_CLASS);
+        oi = efl_data_scope_get(o->cur->source, MY_CLASS);
+     }
 
    if (o->cur->scene)
      {
@@ -728,11 +732,10 @@ _efl_canvas_image_internal_efl_gfx_view_view_size_get(Eo *eo_obj, Evas_Image_Dat
         uvw = source->proxy->w;
         uvh = source->proxy->h;
      }
-   else if (source->type == o_type &&
-            ((Evas_Image_Data *)efl_data_scope_get(o->cur->source, MY_CLASS))->engine_data)
+   else if ((source->type == o_type) && oi->engine_data)
      {
-        uvw = source->cur->geometry.w;
-        uvh = source->cur->geometry.h;
+        uvw = oi->cur->image.w;
+        uvh = oi->cur->image.h;
      }
    else
      {
@@ -888,7 +891,7 @@ _efl_canvas_image_internal_efl_file_save(const Eo *eo_obj, Evas_Image_Data *o, c
    Evas_Colorspace want_cspace = EVAS_COLORSPACE_ARGB8888;
    Evas_Object_Protected_Data *obj;
    Eina_Bool unmap_it = EINA_FALSE;
-   int imagew, imageh, uvw, uvh;
+   int imagew, imageh;
    Eina_Rw_Slice slice = {};
    DATA32 *data = NULL;
    void *pixels = NULL;
@@ -899,7 +902,7 @@ _efl_canvas_image_internal_efl_file_save(const Eo *eo_obj, Evas_Image_Data *o, c
    evas_object_async_block(obj);
 
    pixels = _evas_image_pixels_get((Eo *) eo_obj, obj, ENDT, NULL, NULL, 0, 0,
-                                   &imagew, &imageh, &uvw, &uvh, EINA_TRUE, EINA_TRUE);
+                                   &imagew, &imageh, EINA_TRUE, EINA_TRUE);
    if (!pixels) goto no_pixels;
 
    cspace = ENFN->image_file_colorspace_get(ENDT, pixels);
@@ -1761,10 +1764,10 @@ _efl_canvas_image_internal_efl_canvas_filter_internal_filter_input_render(
    // FIXME: In GL we could use the image even if scaled
    if (!_image_has_border(obj, o) && _image_is_filled(obj, o) && !_image_is_scaled(obj, o))
      {
-        int imagew, imageh, uvw, uvh;
+        int imagew, imageh;
 
         surface = _evas_image_pixels_get(eo_obj, obj, output, NULL, NULL, x, y,
-                                         &imagew, &imageh, &uvw, &uvh, EINA_FALSE, EINA_FALSE);
+                                         &imagew, &imageh, EINA_FALSE, EINA_FALSE);
 
         ok = evas_filter_buffer_backing_set(filter, EVAS_FILTER_BUFFER_INPUT_ID, surface);
         if (ok) return EINA_TRUE;
@@ -1890,7 +1893,7 @@ evas_object_image_render(Evas_Object *eo_obj, Evas_Object_Protected_Data *obj, v
 void *
 _evas_image_pixels_get(Eo *eo_obj, Evas_Object_Protected_Data *obj,
                        void *output, void *context, void *surface, int x, int y,
-                       int *imagew, int *imageh, int *uvw, int *uvh,
+                       int *imagew, int *imageh,
                        Eina_Bool filtered, Eina_Bool needs_post_render)
 {
    Evas_Image_Data *o = obj->private_data, *oi = NULL;
@@ -1912,8 +1915,6 @@ _evas_image_pixels_get(Eo *eo_obj, Evas_Object_Protected_Data *obj,
    if (pixels)
      {
         ENFN->image_size_get(ENDT, pixels, imagew, imageh);
-        *uvw = *imagew;
-        *uvh = *imageh;
      }
    else if (o->cur->scene)
      {
@@ -1921,16 +1922,12 @@ _evas_image_pixels_get(Eo *eo_obj, Evas_Object_Protected_Data *obj,
         pixels = obj->data_3d->surface;
         *imagew = obj->data_3d->w;
         *imageh = obj->data_3d->h;
-        *uvw = *imagew;
-        *uvh = *imageh;
      }
    else if (obj->cur->snapshot)
      {
         pixels = o->engine_data;
         *imagew = o->cur->image.w;
         *imageh = o->cur->image.h;
-        *uvw = *imagew;
-        *uvh = *imageh;
      }
    else if (!o->cur->source || !source)
      {
@@ -1942,16 +1939,12 @@ _evas_image_pixels_get(Eo *eo_obj, Evas_Object_Protected_Data *obj,
           pixels = o->engine_data;
         *imagew = o->cur->image.w;
         *imageh = o->cur->image.h;
-        *uvw = *imagew;
-        *uvh = *imageh;
      }
    else if (source->proxy->surface && !source->proxy->redraw)
      {
         pixels = source->proxy->surface;
         *imagew = source->proxy->w;
         *imageh = source->proxy->h;
-        *uvw = *imagew;
-        *uvh = *imageh;
      }
    else if (oi && oi->engine_data)
      {
@@ -1961,8 +1954,6 @@ _evas_image_pixels_get(Eo *eo_obj, Evas_Object_Protected_Data *obj,
           pixels = oi->engine_data;
         *imagew = oi->cur->image.w;
         *imageh = oi->cur->image.h;
-        *uvw = source->cur->geometry.w;
-        *uvh = source->cur->geometry.h;
         /* check source_clip since we skip proxy_subrender here */
         if (context && o->proxy_src_clip && source->cur->clipper)
           {
@@ -1981,8 +1972,6 @@ _evas_image_pixels_get(Eo *eo_obj, Evas_Object_Protected_Data *obj,
         pixels = source->proxy->surface;
         *imagew = source->proxy->w;
         *imageh = source->proxy->h;
-        *uvw = *imagew;
-        *uvh = *imageh;
         o->proxyrendering = EINA_FALSE;
      }
 
@@ -2003,13 +1992,13 @@ _evas_image_render(Eo *eo_obj, Evas_Object_Protected_Data *obj,
                    int l, int t, int r, int b, Eina_Bool skip_map, Eina_Bool do_async)
 {
    Evas_Image_Data *o = obj->private_data;
-   int imagew, imageh, uvw, uvh, cw, ch;
+   int imagew, imageh, cw, ch;
    int ix, iy, iw, ih, offx, offy;
    int idw, idh, idx, idy;
    void *pixels;
 
    pixels = _evas_image_pixels_get(eo_obj, obj, output, context, surface, x, y,
-                                   &imagew, &imageh, &uvw, &uvh, EINA_FALSE, EINA_FALSE);
+                                   &imagew, &imageh, EINA_FALSE, EINA_FALSE);
 
    if (!pixels) return;
    if (ENFN->context_clip_get(ENDT, context, NULL, NULL, &cw, &ch) && (!cw || !ch))
@@ -2018,7 +2007,7 @@ _evas_image_render(Eo *eo_obj, Evas_Object_Protected_Data *obj,
    if (!skip_map && (obj->map->cur.map) && (obj->map->cur.map->count > 3)
        && (obj->map->cur.usemap))
      {
-        evas_object_map_update(eo_obj, x, y, imagew, imageh, uvw, uvh);
+        evas_object_map_update(eo_obj, x, y, imagew, imageh);
 
         evas_draw_image_map_async_check(
                  obj, output, context, surface, pixels, obj->map->spans,
@@ -2972,7 +2961,7 @@ evas_object_image_is_inside(Evas_Object *eo_obj,
 			    Evas_Coord px, Evas_Coord py)
 {
    Evas_Image_Data *o = type_private_data;
-   int imagew, imageh, uvw, uvh, ix, iy, iw, ih, idw, idh, idx, idy;
+   int imagew, imageh, ix, iy, iw, ih, idw, idh, idx, idy;
    int is_inside = 0;
    void *pixels;
 
@@ -2984,7 +2973,7 @@ evas_object_image_is_inside(Evas_Object *eo_obj,
     * draw, just get the pixels so we can check the transparency.
     */
    pixels = _evas_image_pixels_get(eo_obj, obj, ENDT, NULL, NULL, 0, 0,
-                                   &imagew, &imageh, &uvw, &uvh, EINA_TRUE, EINA_FALSE);
+                                   &imagew, &imageh, EINA_TRUE, EINA_FALSE);
    if (!pixels) return is_inside;
 
    /* TODO: not handling o->dirty_pixels && o->pixels->func.get_pixels,
@@ -3002,7 +2991,7 @@ evas_object_image_is_inside(Evas_Object *eo_obj,
    /* TODO: not handling map, need to apply map to point */
    if ((obj->map->cur.map) && (obj->map->cur.map->count > 3) && (obj->map->cur.usemap))
      {
-        evas_object_map_update(eo_obj, 0, 0, imagew, imageh, uvw, uvh);
+        evas_object_map_update(eo_obj, 0, 0, imagew, imageh);
 
         ERR("map not supported");
         return is_inside;

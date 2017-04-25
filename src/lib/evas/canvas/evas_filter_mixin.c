@@ -283,7 +283,7 @@ evas_filter_object_render(Eo *eo_obj, Evas_Object_Protected_Data *obj,
 
         use_map = EINA_TRUE;
         ENFN->image_size_get(ENC, previous, &iw, &ih);
-        evas_object_map_update(eo_obj, x, y, iw, ih, iw, ih);
+        evas_object_map_update(eo_obj, x, y, iw, ih);
      }
 
    if (!pd->data->chain)
