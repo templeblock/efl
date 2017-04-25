@@ -3624,6 +3624,11 @@ EAPI const Eina_List        *evas_font_path_global_list(void) EINA_WARN_UNUSED_R
  */
 EAPI void                    evas_font_reinit(void);
 
+struct _Efl_Animation_Animate_Event_Info
+{
+   double progress;
+};
+
 /**
  * @}
  */

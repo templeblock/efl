@@ -463,3 +463,5 @@ enum Efl.Animation.Event_Type
    clicked,  [["clicked" event type]]
    count     [[total count of event type]]
 }
+
+struct Efl.Animation.Animate_Event_Info; [[Information of animate event]]

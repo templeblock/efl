@@ -28,4 +28,12 @@ abstract Efl.Animation (Efl.Object)
          return: bool; [[$true on success, $false otherwise]]
       }
    }
+   implements {
+      Efl.Object.constructor;
+      Efl.Object.destructor;
+   }
+   events {
+      animate @hot; [[Animation is animated.]]
+      end @hot; [[Animation ended]]
+   }
 }
