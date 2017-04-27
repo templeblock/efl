@@ -88,10 +88,10 @@ _slice_apply(State *st, Slice *sl,
              Evas_Coord ox, Evas_Coord oy, Evas_Coord ow, Evas_Coord oh)
 {
    efl_gfx_map_reset(sl->obj);
-   efl_gfx_map_smooth_set(sl->obj, EINA_FALSE);
+   efl_gfx_map_smooth_set(sl->obj, EINA_TRUE);
+   efl_gfx_map_color_set(sl->obj, -1, 255, 255, 255, 255);
    for (int i = 0; i < 4; i++)
      {
-        efl_gfx_map_color_set(sl->obj, i, 255, 255, 255, 255);
         if (st->dir == 0)
           {
              int p[4] = { 0, 1, 2, 3 };
@@ -121,10 +121,10 @@ _slice_apply(State *st, Slice *sl,
 }
 
 static void
-_slice_3d(State *st EINA_UNUSED, Slice *sl)
+_slice_3d(State *st EINA_UNUSED, Slice *sl, Evas_Coord x, Evas_Coord y, Evas_Coord w, Evas_Coord h)
 {
    // vanishing point is center of page, and focal dist is 1024
-   efl_gfx_map_perspective_3d(sl->obj, st->front, 0.5, 0.5, 0, 1024);
+   efl_gfx_map_perspective_3d(sl->obj, NULL, x + (w / 2), y + (h / 2), 0, 1024);
 
    for (int i = 0; i < 4; i++)
      {
@@ -137,12 +137,12 @@ _slice_3d(State *st EINA_UNUSED, Slice *sl)
 }
 
 static void
-_slice_light(State *st EINA_UNUSED, Slice *sl)
+_slice_light(State *st EINA_UNUSED, Slice *sl, Evas_Coord x, Evas_Coord y, Evas_Coord w, Evas_Coord h)
 {
    efl_gfx_map_lightning_3d(sl->obj,
                             // light position
                             // (centered over page 10 * h toward camera)
-                            st->front, 0.5, 0.5, -10000,
+                            NULL, x + (w / 2), y + (h / 2), -10000,
                             255, 255, 255, // light color
                             0 , 0 , 0); // ambient minimum
 
@@ -417,8 +417,8 @@ _state_update(State *st)
    n = 1.0 - n;
    thetal = 7.86 + n;
 
-   nw = 4;//16;
-   nh = 4;//16;
+   nw = 16;
+   nh = 16;
    gszw = w / nw;
    gszh = h / nh;
    if (gszw < 4) gszw = 4;
@@ -589,8 +589,8 @@ _state_update(State *st)
           {
              _slice_apply(st, st->slices[num], x, y, w, h, ox, oy, ow, oh);
              _slice_apply(st, st->slices2[num], x, y, w, h, ox, oy, ow, oh);
-             _slice_light(st, st->slices[num]);
-             _slice_light(st, st->slices2[num]);
+             _slice_light(st, st->slices[num], ox, oy, ow, oh);
+             _slice_light(st, st->slices2[num], ox, oy, ow, oh);
              num++;
           }
      }
@@ -653,8 +653,8 @@ _state_update(State *st)
      {
         for (j = 0; j < st->slices_h; j++)
           {
-             _slice_3d(st, st->slices[num]);
-             _slice_3d(st, st->slices2[num]);
+             _slice_3d(st, st->slices[num], ox, oy, ow, oh);
+             _slice_3d(st, st->slices2[num], ox, oy, ow, oh);
              num++;
           }
      }

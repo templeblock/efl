@@ -46,6 +46,13 @@ mixin Efl.Gfx.Map (Efl.Interface, Efl.Object)
             cw: bool; [[$true if clockwise, $false if counter clockwise]]
          }
       }
+
+      // FIXME: This needs modes such as "default", "smooth", "fast", "fastest"
+      // In SW: default, fast and fastest are not smooth
+      // In GL: All but fastest are smooth
+      // Same remark for alpha - it's only for performance
+      // Same remark for (MISSING) anti-aliasing
+
       @property map_smooth {
          [[Smoothing state for map rendering.
 
