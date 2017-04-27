@@ -15,6 +15,8 @@ typedef struct _Efl_Gfx_Map_Data      Efl_Gfx_Map_Data;
 typedef enum _Gfx_Map_Op_Type         Gfx_Map_Op_Type;
 
 enum _Gfx_Map_Op_Type {
+   GFX_MAP_RAW_COORD,
+   GFX_MAP_COLOR,
    GFX_MAP_ROTATE_2D,
    GFX_MAP_ROTATE_3D,
    GFX_MAP_ROTATE_QUAT,
@@ -29,6 +31,14 @@ struct _Gfx_Map_Op {
 
    Gfx_Map_Op_Type op;
    union {
+      struct {
+         int idx;
+         double x, y, z;
+      } raw_coord;
+      struct {
+         int idx;
+         uint8_t r, g, b, a;
+      } color;
       struct {
          double degrees;
       } rotate_2d;
@@ -64,13 +74,10 @@ struct _Gfx_Map {
 
    struct {
       double u, v;
-      double x, y, z;
-      uint8_t r, g, b, a;
    } point[4];
 
    Eina_Bool alpha;
    Eina_Bool smooth;
-   Eina_Bool absolute_xy;
    Eina_Bool event_cbs;
 };
 
@@ -83,15 +90,9 @@ struct _Efl_Gfx_Map_Data {
 static Eina_Cow *gfx_map_cow = NULL;
 static const Gfx_Map gfx_map_cow_default = {
    NULL,
-   {
-      { 0.0, 0.0, 0.0, 0.0, 0.0, 255, 255, 255, 255 },
-      { 1.0, 0.0, 0.0, 0.0, 0.0, 255, 255, 255, 255 },
-      { 1.0, 1.0, 0.0, 0.0, 0.0, 255, 255, 255, 255 },
-      { 0.0, 1.0, 0.0, 0.0, 0.0, 255, 255, 255, 255 }
-   },
+   { { 0.0, 0.0 }, { 1.0, 0.0 }, { 1.0, 1.0 }, { 0.0, 1.0 } },
    EINA_TRUE,
    EINA_TRUE,
-   EINA_FALSE,
    EINA_FALSE
 };
 
@@ -164,7 +165,7 @@ _map_dirty(Eo *eo_obj, Efl_Gfx_Map_Data *pd, Eina_Bool reset)
    _evas_object_map_enable_set(eo_obj, obj, !reset);
    evas_object_change(eo_obj, obj);
 
-   if (!reset && !pd->cow->absolute_xy)
+   if (!reset)
      {
         if (!pd->cow->event_cbs)
           {
@@ -185,37 +186,29 @@ _map_dirty(Eo *eo_obj, Efl_Gfx_Map_Data *pd, Eina_Bool reset)
      }
 }
 
-static void
-_map_update(Eo *eo_obj, Efl_Gfx_Map_Data *pd)
+static Evas_Map *
+_map_calc(Eo *eo_obj, Efl_Gfx_Map_Data *pd, int *tofree)
 {
-   Evas_Object_Protected_Data *obj = EVAS_OBJ_GET_OR_RETURN(eo_obj);
+   Evas_Object_Protected_Data *obj = EVAS_OBJ_GET_OR_RETURN(eo_obj, NULL);
    Evas_Map *m = NULL;
+   Gfx_Map_Op *op;
    int imw, imh;
 
-   if (!obj->gfx_map_update) return;
+   *tofree = EINA_FALSE;
+   if (!obj->gfx_map_update) return obj->map->cur.map;
    if (pd->cow == &gfx_map_cow_default)
-     goto end;
+     return obj->map->cur.map;
 
+   *tofree = EINA_TRUE;
    m = evas_map_new(4);
    m->alpha = pd->cow->alpha;
    m->smooth = pd->cow->smooth;
    m->move_sync.enabled = EINA_FALSE;
 
-   if (pd->cow->absolute_xy)
-     {
-        for (int k = 0; k < 4; k++)
-          {
-             Evas_Map_Point *p = &(m->points[k]);
-             p->px = p->x = pd->cow->point[k].x;
-             p->py = p->y = pd->cow->point[k].y;
-          }
-     }
-   else
-     {
-        _evas_map_util_points_populate(m, obj->cur->geometry.x, obj->cur->geometry.y,
-                                       obj->cur->geometry.w, obj->cur->geometry.h, 0);
-     }
+   _evas_map_util_points_populate(m, obj->cur->geometry.x, obj->cur->geometry.y,
+                                  obj->cur->geometry.w, obj->cur->geometry.h, 0);
 
+   // Image is a special case as its buffer is the original image data
    if (efl_isa(eo_obj, EFL_CANVAS_IMAGE_INTERNAL_CLASS))
      efl_gfx_view_size_get(eo_obj, &imw, &imh);
    else
@@ -226,83 +219,103 @@ _map_update(Eo *eo_obj, Efl_Gfx_Map_Data *pd)
         Evas_Map_Point *p = &(m->points[k]);
         p->u = pd->cow->point[k].u * imw;
         p->v = pd->cow->point[k].v * imh;
-        p->z = pd->cow->point[k].z;
-        p->r = pd->cow->point[k].r;
-        p->g = pd->cow->point[k].g;
-        p->b = pd->cow->point[k].b;
-        p->a = pd->cow->point[k].a;
      }
 
-   if (!pd->cow->absolute_xy)
+   EINA_INLIST_FOREACH(pd->cow->ops, op)
      {
-        Gfx_Map_Op *op;
+        int px = 0, py = 0, pw = 1, ph = 1, k, kmin = 0, kmax = 3;
+        double cx, cy, cz;
+        Evas_Map_Point *p;
+        Efl_Gfx *pivot;
 
-        EINA_INLIST_FOREACH(pd->cow->ops, op)
+        // FIXME: Do not fetch geometry here (use event callback)
+        pivot = op->pivot.eo_obj ?: eo_obj;
+        if (!op->pivot.is_canvas)
           {
-             int px = 0, py = 0, pw = 1, ph = 1;
-             double cx, cy, cz;
-             Efl_Gfx *pivot;
-
-             pivot = op->pivot.eo_obj ?: eo_obj;
-             if (!op->pivot.is_canvas)
-               {
-                  efl_gfx_geometry_get(pivot, &px, &py, &pw, &ph);
-               }
+             efl_gfx_geometry_get(pivot, &px, &py, &pw, &ph);
+          }
+        else
+          {
+             // Note: pivot can not be an Evas when using pure EO API
+             if (efl_isa(pivot, EVAS_CANVAS_CLASS))
+               evas_output_size_get(pivot, &pw, &ph);
              else
-               {
-                  // Note: pivot can not be an Evas when using pure EO API
-                  if (efl_isa(pivot, EVAS_CANVAS_CLASS))
-                    evas_output_size_get(pivot, &pw, &ph);
-                  else
-                    efl_gfx_size_get(pivot, &pw, &ph);
-               }
-             cx = (double) px + (double) pw * op->pivot.cx;
-             cy = (double) py + (double) ph * op->pivot.cy;
-             cz = op->pivot.cz;
+               efl_gfx_size_get(pivot, &pw, &ph);
+          }
+        cx = (double) px + (double) pw * op->pivot.cx;
+        cy = (double) py + (double) ph * op->pivot.cy;
+        cz = op->pivot.cz;
 
-             switch (op->op)
+        switch (op->op)
+          {
+           case GFX_MAP_RAW_COORD:
+             if (op->raw_coord.idx != -1)
+               kmin = kmax = op->raw_coord.idx;
+             for (k = kmin; k <= kmax; k++)
                {
-                case GFX_MAP_ROTATE_2D:
-                  _map_util_rotate(m, op->rotate_2d.degrees, cx, cy);
-                  break;
-                case GFX_MAP_ROTATE_3D:
-                  _map_util_3d_rotate(m, op->rotate_3d.dx, op->rotate_3d.dy,
-                                      op->rotate_3d.dz, cx, cy, cz);
-                  break;
-                case GFX_MAP_ROTATE_QUAT:
-                  _map_util_quat_rotate(m, op->rotate_quat.qx, op->rotate_quat.qy,
-                                        op->rotate_quat.qz, op->rotate_quat.qw,
-                                        cx, cy, cz);
-                  break;
-                case GFX_MAP_ZOOM:
-                  _map_util_zoom(m, op->zoom.zx, op->zoom.zy, cx, cy);
-                  break;
-                case GFX_MAP_TRANSLATE:
-                  _map_util_translate(m, op->translate.dx, op->translate.dy,
-                                      op->translate.dz);
-                  break;
-                case GFX_MAP_LIGHTNING_3D:
-                  _map_util_3d_lighting(m, cx, cy, cz, op->lightning_3d.lr,
-                                        op->lightning_3d.lg, op->lightning_3d.lb,
-                                        op->lightning_3d.ar, op->lightning_3d.ag,
-                                        op->lightning_3d.ab);
-                  break;
-                case GFX_MAP_PERSPECTIVE_3D:
-                  _map_util_3d_perspective(m, cx, cy, op->perspective_3d.z0,
-                                           op->perspective_3d.foc);
-                  break;
+                  p = &(m->points[k]);
+                  p->px = p->x = op->raw_coord.x;
+                  p->py = p->y = op->raw_coord.y;
+                  p->z = op->raw_coord.z;
                }
+             break;
+           case GFX_MAP_COLOR:
+             if (op->raw_coord.idx != -1)
+               kmin = kmax = op->raw_coord.idx;
+             for (k = kmin; k <= kmax; k++)
+               {
+                  p = &(m->points[k]);
+                  p->r = op->color.r;
+                  p->g = op->color.g;
+                  p->b = op->color.b;
+                  p->a = op->color.a;
+               }
+             break;
+           case GFX_MAP_ROTATE_2D:
+             _map_util_rotate(m, op->rotate_2d.degrees, cx, cy);
+             break;
+           case GFX_MAP_ROTATE_3D:
+             _map_util_3d_rotate(m, op->rotate_3d.dx, op->rotate_3d.dy,
+                                 op->rotate_3d.dz, cx, cy, cz);
+             break;
+           case GFX_MAP_ROTATE_QUAT:
+             _map_util_quat_rotate(m, op->rotate_quat.qx, op->rotate_quat.qy,
+                                   op->rotate_quat.qz, op->rotate_quat.qw,
+                                   cx, cy, cz);
+             break;
+           case GFX_MAP_ZOOM:
+             _map_util_zoom(m, op->zoom.zx, op->zoom.zy, cx, cy);
+             break;
+           case GFX_MAP_TRANSLATE:
+             _map_util_translate(m, op->translate.dx, op->translate.dy,
+                                 op->translate.dz);
+             break;
+           case GFX_MAP_LIGHTNING_3D:
+             _map_util_3d_lighting(m, cx, cy, cz, op->lightning_3d.lr,
+                                   op->lightning_3d.lg, op->lightning_3d.lb,
+                                   op->lightning_3d.ar, op->lightning_3d.ag,
+                                   op->lightning_3d.ab);
+             break;
+           case GFX_MAP_PERSPECTIVE_3D:
+             _map_util_3d_perspective(m, cx, cy, op->perspective_3d.z0,
+                                      op->perspective_3d.foc);
+             break;
           }
      }
-   else if (pd->cow->ops)
-     {
-        ERR("Map absolute coordinates override all high-level transformations, "
-            "such as rotate, perspective, etc...");
-     }
 
-end:
+   return m;
+}
+
+static void
+_map_update(Eo *eo_obj, Efl_Gfx_Map_Data *pd)
+{
+   Evas_Object_Protected_Data *obj = EVAS_OBJ_GET_OR_RETURN(eo_obj);
+   int tofree = 0;
+   Evas_Map *m;
+
+   m = _map_calc(eo_obj, pd, &tofree);
    evas_object_map_set(eo_obj, m);
-   if (m) evas_map_free(m);
+   if (tofree) evas_map_free(m);
    obj->gfx_map_update = EINA_FALSE;
 }
 
@@ -350,7 +363,6 @@ _efl_gfx_map_map_has(Eo *eo_obj EINA_UNUSED, Efl_Gfx_Map_Data *pd EINA_UNUSED)
    if (pd->cow->ops) return EINA_TRUE;
    if (memcmp(&pd->cow->point, &gfx_map_cow_default.point, sizeof(pd->cow->point)))
      return EINA_TRUE;
-   if (pd->cow->absolute_xy) return EINA_TRUE;
    return EINA_FALSE;
 }
 
@@ -380,11 +392,15 @@ _efl_gfx_map_map_reset(Eo *eo_obj, Efl_Gfx_Map_Data *pd)
 EOLIAN static Eina_Bool
 _efl_gfx_map_map_clockwise_get(Eo *eo_obj, Efl_Gfx_Map_Data *pd)
 {
-   Evas_Object_Protected_Data *obj = EVAS_OBJ_GET_OR_RETURN(eo_obj, EINA_TRUE);
+   Eina_Bool ret;
+   int tofree = 0;
+   Evas_Map *m;
 
-   _map_update(eo_obj, pd);
-   if (!obj->map->cur.map) return EINA_TRUE;
-   return evas_map_util_clockwise_get(obj->map->cur.map);
+   m = _map_calc(eo_obj, pd, &tofree);
+   if (!m) return EINA_TRUE;
+   ret = evas_map_util_clockwise_get(m);
+   if (tofree) evas_map_free(m);
+   return ret;
 }
 
 EOLIAN static void
@@ -420,46 +436,16 @@ _efl_gfx_map_map_alpha_get(Eo *eo_obj EINA_UNUSED, Efl_Gfx_Map_Data *pd)
 }
 
 EOLIAN static void
-_efl_gfx_map_map_raw_coord_set(Eo *eo_obj, Efl_Gfx_Map_Data *pd,
-                               int idx, double x, double y, double z)
-{
-   Gfx_Map *mcow;
-
-   EINA_SAFETY_ON_FALSE_RETURN((idx >= 0) && (idx < 4));
-
-   if (EINA_DBL_EQ(pd->cow->point[idx].x, x) &&
-       EINA_DBL_EQ(pd->cow->point[idx].y, y) &&
-       EINA_DBL_EQ(pd->cow->point[idx].z, z) &&
-       pd->cow->absolute_xy)
-     return;
-
-   mcow = MAPCOW_BEGIN(pd);
-   mcow->point[idx].x = x;
-   mcow->point[idx].y = y;
-   mcow->point[idx].x = x;
-   mcow->absolute_xy = EINA_TRUE;
-   MAPCOW_END(mcow, pd);
-
-   _map_dirty(eo_obj, pd, EINA_FALSE);
-}
-
-EOLIAN static void
 _efl_gfx_map_map_raw_coord_get(Eo *eo_obj, Efl_Gfx_Map_Data *pd,
                                int idx, double *x, double *y, double *z)
 {
    Evas_Object_Protected_Data *obj = EVAS_OBJ_GET_OR_RETURN(eo_obj);
-   const Evas_Map *m = obj->map->cur.map;
+   int tofree = 0;
+   Evas_Map *m;
 
    EINA_SAFETY_ON_FALSE_RETURN((idx >= 0) && (idx < 4));
 
-   if (pd->cow->absolute_xy)
-     {
-        if (x) *x = pd->cow->point[idx].x;
-        if (y) *y = pd->cow->point[idx].y;
-        if (z) *z = pd->cow->point[idx].z;
-        return;
-     }
-
+   m = _map_calc(eo_obj, pd, &tofree);
    if (!m)
      {
         int X, Y, W, H;
@@ -484,6 +470,7 @@ _efl_gfx_map_map_raw_coord_get(Eo *eo_obj, Efl_Gfx_Map_Data *pd,
      }
 
    _map_point_coord_get(m, idx, x, y, z);
+   if (tofree) evas_map_free(m);
 }
 
 EOLIAN static void
@@ -517,45 +504,23 @@ _efl_gfx_map_map_uv_get(Eo *eo_obj EINA_UNUSED, Efl_Gfx_Map_Data *pd,
 }
 
 EOLIAN static void
-_efl_gfx_map_map_color_set(Eo *eo_obj, Efl_Gfx_Map_Data *pd,
-                           int idx, int r, int g, int b, int a)
-{
-   int kmin = 0, kmax = 3;
-   Gfx_Map *mcow;
-
-   EINA_SAFETY_ON_FALSE_RETURN((idx >= -1) && (idx < 4));
-
-   if ((idx != -1) &&
-       (pd->cow->point[idx].r == r) && (pd->cow->point[idx].g == g) &&
-       (pd->cow->point[idx].b == b) && (pd->cow->point[idx].a == a))
-     return;
-
-   if (idx >= 0)
-     kmin = kmax = idx;
-
-   mcow = MAPCOW_BEGIN(pd);
-   for (int k = kmin; k <= kmax; k++)
-     {
-        mcow->point[k].r = r;
-        mcow->point[k].g = g;
-        mcow->point[k].b = b;
-        mcow->point[k].a = a;
-     }
-   MAPCOW_END(mcow, pd);
-
-   _map_dirty(eo_obj, pd, EINA_FALSE);
-}
-
-EOLIAN static void
 _efl_gfx_map_map_color_get(Eo *eo_obj EINA_UNUSED, Efl_Gfx_Map_Data *pd,
                            int idx, int *r, int *g, int *b, int *a)
 {
    EINA_SAFETY_ON_FALSE_RETURN((idx >= 0) && (idx < 4));
+   Evas_Map_Point *p;
+   int tofree = 0;
+   Evas_Map *m;
 
-   if (r) *r = pd->cow->point[idx].r;
-   if (g) *g = pd->cow->point[idx].g;
-   if (b) *b = pd->cow->point[idx].b;
-   if (a) *a = pd->cow->point[idx].a;
+   if (!r && !g && !b && !a) return;
+
+   m = _map_calc(eo_obj, pd, &tofree);
+   p = &(m->points[idx]);
+   if (r) *r = p->r;
+   if (g) *g = p->g;
+   if (b) *b = p->b;
+   if (a) *a = p->a;
+   if (tofree) evas_map_free(m);
 }
 
 static Gfx_Map_Op *
@@ -587,6 +552,41 @@ _gfx_map_op_add(Eo *eo_obj, Efl_Gfx_Map_Data *pd, Gfx_Map_Op_Type type,
    _map_dirty(eo_obj, pd, EINA_FALSE);
 
    return op;
+}
+
+EOLIAN static void
+_efl_gfx_map_map_raw_coord_set(Eo *eo_obj, Efl_Gfx_Map_Data *pd,
+                               int idx, double x, double y, double z)
+{
+   Gfx_Map_Op *op;
+
+   EINA_SAFETY_ON_FALSE_RETURN((idx >= 0) && (idx < 4));
+
+   op = _gfx_map_op_add(eo_obj, pd, GFX_MAP_RAW_COORD, NULL, 0, 0, 0);
+   if (!op) return;
+
+   op->raw_coord.idx = idx;
+   op->raw_coord.x = x;
+   op->raw_coord.y = y;
+   op->raw_coord.z = z;
+}
+
+EOLIAN static void
+_efl_gfx_map_map_color_set(Eo *eo_obj, Efl_Gfx_Map_Data *pd,
+                           int idx, int r, int g, int b, int a)
+{
+   Gfx_Map_Op *op;
+
+   EINA_SAFETY_ON_FALSE_RETURN((idx >= 0) && (idx < 4));
+
+   op = _gfx_map_op_add(eo_obj, pd, GFX_MAP_COLOR, NULL, 0, 0, 0);
+   if (!op) return;
+
+   op->color.idx = idx;
+   op->color.r = r;
+   op->color.g = g;
+   op->color.b = b;
+   op->color.a = a;
 }
 
 EOLIAN static void

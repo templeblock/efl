@@ -92,9 +92,8 @@ mixin Efl.Gfx.Map (Efl.Interface, Efl.Object)
            Remember all coordinates are canvas global ones like with move and resize
            in the canvas.
 
-           This function should rarely be used as it overrides any other
-           transformation set. This property can be read to get the 4 points
-           positions on the canvas, or set to manually place them.
+           This property can be read to get the 4 points positions on the
+           canvas, or set to manually place them.
          ]]
          keys {
             idx: int; [[ID of the point, from 0 to 3 (included).]]
