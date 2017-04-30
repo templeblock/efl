@@ -3559,14 +3559,6 @@ _efl_ui_text_password_get(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd)
    return sd->password;
 }
 
-static void
-_efl_ui_text_calc_force(Eo *obj, Efl_Ui_Text_Data *sd)
-{
-   edje_object_calc_force(sd->entry_edje);
-   sd->changed = EINA_TRUE;
-   elm_layout_sizing_eval(obj);
-}
-
 static const char*
 _efl_ui_text_selection_get(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd)
 {
@@ -4715,7 +4707,7 @@ _efl_ui_text_elm_interface_atspi_text_editable_delete(Eo *obj, Efl_Ui_Text_Data 
    evas_textblock_cursor_free(cur1);
    evas_textblock_cursor_free(cur2);
 
-   _efl_ui_text_calc_force(obj, pd);
+//   _efl_ui_text_calc_force(obj, pd);
 
    return EINA_TRUE;
 }
