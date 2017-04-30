@@ -651,10 +651,6 @@ _efl_ui_text_theme_group_get(Evas_Object *obj)
 {
    EFL_UI_TEXT_DATA_GET(obj, sd);
 
-   Eina_Bool single_line;
-
-   single_line = !efl_text_multiline_get(obj);
-
    if (sd->editable)
      {
         if (sd->password) return "base-password";
@@ -2079,10 +2075,11 @@ _entry_changed_handle(void *data,
    Evas_Coord minh;
    const char *text;
    Eina_Bool single_line;
+   Eo *obj = data;
 
-   single_line = !efl_text_multiline_get(data);
+   EFL_UI_TEXT_DATA_GET(obj, sd);
 
-   EFL_UI_TEXT_DATA_GET(data, sd);
+   single_line = !efl_text_multiline_get(obj);
 
    evas_event_freeze(evas_object_evas_get(data));
    sd->changed = EINA_TRUE;
@@ -2094,6 +2091,18 @@ _entry_changed_handle(void *data,
 
    if (sd->single_line != single_line)
      {
+        if (single_line)
+          {
+             Elm_Scroller_Policy hbar, vbar;
+             elm_interface_scrollable_policy_get(obj, &hbar, &vbar);
+             sd->policy_h = hbar;
+             sd->policy_v = vbar;
+             elm_interface_scrollable_policy_set(obj, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_OFF);
+          }
+        else
+          {
+             elm_interface_scrollable_policy_set(obj, sd->policy_h, sd->policy_v);
+          }
         sd->single_line = single_line;
         elm_obj_widget_theme_apply(data);
      }
@@ -3140,6 +3149,7 @@ _efl_ui_text_efl_canvas_group_group_add(Eo *obj, Efl_Ui_Text_Data *priv)
    priv->auto_save = EINA_TRUE;
    priv->editable = EINA_TRUE;
    priv->sel_allow = EINA_TRUE;
+   priv->single_line = !efl_text_multiline_get(text_obj);
 
    priv->drop_format = ELM_SEL_FORMAT_MARKUP | ELM_SEL_FORMAT_IMAGE;
    elm_drop_target_add(obj, priv->drop_format,
@@ -3889,9 +3899,17 @@ _efl_ui_text_scrollable_set(Eo *obj, Efl_Ui_Text_Data *sd, Eina_Bool scroll)
 
         elm_interface_scrollable_bounce_allow_set(obj, sd->h_bounce, sd->v_bounce);
         if (sd->single_line)
-           elm_interface_scrollable_policy_set(obj, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_OFF);
+          {
+             Elm_Scroller_Policy hbar, vbar;
+             elm_interface_scrollable_policy_get(obj, &hbar, &vbar);
+             sd->policy_h = hbar;
+             sd->policy_v = vbar;
+             elm_interface_scrollable_policy_set(obj, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_OFF);
+          }
         else
-           elm_interface_scrollable_policy_set(obj, sd->policy_h, sd->policy_v);
+          {
+             elm_interface_scrollable_policy_set(obj, sd->policy_h, sd->policy_v);
+          }
         elm_interface_scrollable_content_set(obj, sd->entry_edje);
         elm_interface_scrollable_content_viewport_resize_cb_set(obj, _efl_ui_text_content_viewport_resize_cb);
         elm_widget_on_show_region_hook_set(obj, _show_region_hook, NULL);
@@ -3920,14 +3938,6 @@ EOLIAN static Eina_Bool
 _efl_ui_text_scrollable_get(Eo *obj EINA_UNUSED, Efl_Ui_Text_Data *sd)
 {
    return sd->scroll;
-}
-
-EOLIAN static void
-_efl_ui_text_elm_interface_scrollable_policy_set(Eo *obj, Efl_Ui_Text_Data *sd, Elm_Scroller_Policy h, Elm_Scroller_Policy v)
-{
-   sd->policy_h = h;
-   sd->policy_v = v;
-   elm_interface_scrollable_policy_set(efl_super(obj, MY_CLASS), sd->policy_h, sd->policy_v);
 }
 
 EOLIAN static void
