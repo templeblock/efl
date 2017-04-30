@@ -410,6 +410,7 @@ struct _Evas_Object_Textblock_Paragraph
    Evas_BiDi_Paragraph_Props         *bidi_props; /**< Only valid during layout. */
    Evas_BiDi_Direction                direction;  /**< Bidi direction enum value. The display direction like right to left.*/
    Evas_Coord                         y, w, h;  /**< Text block co-ordinates. y co-ord, width and height. */
+   Evas_Coord                         last_fw;   /**< Last calculated formatted width  */
    int                                line_no;  /**< Line no of the text block. */
    Eina_Bool                          is_bidi : 1;  /**< EINA_TRUE if this is BiDi Paragraph, else EINA_FALSE. */
    Eina_Bool                          visible : 1;  /**< EINA_TRUE if paragraph visible, else EINA_FALSE. */
@@ -3859,6 +3860,7 @@ loop_advance:
      {
         Evas_Coord new_wmax = c->ln->w +
            c->marginl + c->marginr - (c->o->style_pad.l + c->o->style_pad.r);
+        c->par->last_fw = new_wmax;
         if (new_wmax > c->wmax)
            c->wmax = new_wmax;
      }
@@ -5428,6 +5430,7 @@ _layout_par(Ctxt *c)
              if (c->position == TEXTBLOCK_POSITION_START)
                 c->position = TEXTBLOCK_POSITION_ELSE;
 
+             if (c->par->last_fw > c->wmax) c->wmax = c->par->last_fw;
              return 0;
           }
 
@@ -5496,6 +5499,7 @@ _layout_par(Ctxt *c)
 
    Eina_Bool item_preadv = EINA_FALSE;
    Evas_Textblock_Obstacle *obs = NULL;
+   c->par->last_fw = 0;
    for (i = c->par->logical_items ; i ; )
      {
         Evas_Coord prevdescent = 0, prevascent = 0;
